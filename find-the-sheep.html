@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find the Sheep — Around the world. An interactive moment of discovery.">
+    <title>Find the Sheep | Good Shepherd</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    <site-header class="site-header">
+        <div class="header-container">
+            <div class="wordmark">
+                <a href="index.html">
+                    <img src="img/favicon.png" alt="Good Shepherd" class="wordmark-icon">
+                    <span>Good Shepherd</span>
+                </a>
+            </div>
+            <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="shop.html">Shop</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="sheep-crush.html">Sheep Crush</a></li>
+                    <li><a href="appointments.html">Appointments</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </site-header>
+
+    <main>
+        <!-- Game Module -->
+        <div class="game-container">
+            <div class="game-inner">
+                
+                <!-- Entry State -->
+                <div class="game-state" id="entryState">
+                    <div class="game-intro">
+                        <h1>Sheep Crush</h1>
+                        <p class="game-subtitle">Around the world.</p>
+                        <div class="intro-text">
+                            <p>"Look closely."</p>
+                            <p>"There's a sheep somewhere in the world."</p>
+                        </div>
+                        <button class="btn btn-primary" id="beginBtn">Begin</button>
+                    </div>
+                </div>
+
+                <!-- Photo State -->
+                <div class="game-state hidden" id="photoState">
+                    <div class="photo-wrapper">
+                        <img id="gamePhoto" src="" alt="Photo with hidden sheep" class="game-image">
+                        <div id="sheepTarget" class="sheep-target"></div>
+                        <div id="sheepOverlay" class="sheep-overlay hidden">
+                            <svg viewBox="0 0 100 100" class="sheep-svg">
+                                <!-- Sheep icon -->
+                                <circle cx="50" cy="35" r="20" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="2"/>
+                                <circle cx="40" cy="25" r="8" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="1.5"/>
+                                <circle cx="60" cy="25" r="8" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="1.5"/>
+                                <circle cx="50" cy="30" r="3" fill="#1F1F1D"/>
+                                <circle cx="45" cy="32" r="2" fill="#1F1F1D"/>
+                                <circle cx="55" cy="32" r="2" fill="#1F1F1D"/>
+                                <path d="M 50 38 L 48 42 M 50 38 L 52 42" stroke="#1F1F1D" stroke-width="2" fill="none"/>
+                                <ellipse cx="50" cy="55" rx="18" ry="22" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="2"/>
+                                <circle cx="35" cy="70" r="6" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="1.5"/>
+                                <circle cx="65" cy="70" r="6" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="1.5"/>
+                                <circle cx="40" cy="75" r="5" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="1.5"/>
+                                <circle cx="60" cy="75" r="5" fill="#F6F4EF" stroke="#1F1F1D" stroke-width="1.5"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Found State -->
+                <div class="game-state hidden" id="foundState">
+                    <div class="found-content">
+                        <p class="found-text">You found it.</p>
+                        <div class="location-guess">
+                            <p class="location-question">Where do you think this was taken?</p>
+                            <div class="location-options" id="locationOptions"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reveal State -->
+                <div class="game-state hidden" id="revealState">
+                    <div class="reveal-content">
+                        <p class="location-reveal" id="locationReveal"></p>
+                        <div class="game-actions">
+                            <button class="btn btn-secondary" id="findAnotherBtn">Find another</button>
+                            <button class="btn btn-secondary" id="exploreBtn">Continue exploring</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-wordmark">Good Shepherd</div>
+                <div class="footer-tagline">Minnesota-rooted vintage and restored clothing.</div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><a href="shop.html">All Items</a></li>
+                            <li><a href="shop.html">New Arrivals</a></li>
+                            <li><a href="shop.html">Restored</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Visit</h4>
+                        <ul>
+                            <li><a href="appointments.html">Book Appointment</a></li>
+                            <li><a href="about.html">Our Story</a></li>
+                            <li><a href="find-the-sheep.html">Find the Sheep</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Connect</h4>
+                        <ul>
+                            <li><a href="contact.html">Contact</a></li>
+                            <li><a href="#instagram">Instagram</a></li>
+                            <li><a href="contact.html">Newsletter</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Good Shepherd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/script.js"></script>
+    <script src="js/game.js"></script>
+
+</body>
+</html>

@@ -17,29 +17,41 @@
      */
     function initMobileNav() {
         const navToggle = document.querySelector('.nav-toggle');
-        const body = document.body;
+        const siteHeader = document.querySelector('.site-header');
         
-        if (!navToggle) {
-            console.warn('Navigation toggle button not found');
+        if (!navToggle || !siteHeader) {
+            console.warn('Navigation elements not found');
             return;
         }
 
+        // Function to close the menu
+        function closeMenu() {
+            siteHeader.classList.remove('nav-open');
+            navToggle.setAttribute('aria-expanded', 'false');
+        }
+
+        // Function to open the menu
+        function openMenu() {
+            siteHeader.classList.add('nav-open');
+            navToggle.setAttribute('aria-expanded', 'true');
+        }
+
+        // Toggle menu on button click
         navToggle.addEventListener('click', function() {
-            const isOpen = body.classList.contains('nav-open');
+            const isOpen = siteHeader.classList.contains('nav-open');
             
-            // Toggle open state
-            body.classList.toggle('nav-open');
-            
-            // Update ARIA attribute for accessibility
-            this.setAttribute('aria-expanded', !isOpen);
+            if (isOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
         });
 
         // Close menu when navigation link is clicked
         const navLinks = document.querySelectorAll('.main-nav a');
         navLinks.forEach(link => {
             link.addEventListener('click', function() {
-                body.classList.remove('nav-open');
-                navToggle.setAttribute('aria-expanded', 'false');
+                closeMenu();
             });
         });
 
@@ -48,9 +60,16 @@
             const isNavToggle = e.target.closest('.nav-toggle');
             const isNavMenu = e.target.closest('.main-nav');
             
-            if (!isNavToggle && !isNavMenu && body.classList.contains('nav-open')) {
-                body.classList.remove('nav-open');
-                navToggle.setAttribute('aria-expanded', 'false');
+            if (!isNavToggle && !isNavMenu && siteHeader.classList.contains('nav-open')) {
+                closeMenu();
+            }
+        });
+
+        // Close menu when Escape key is pressed
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && siteHeader.classList.contains('nav-open')) {
+                closeMenu();
+                navToggle.focus(); // Return focus to toggle button
             }
         });
 

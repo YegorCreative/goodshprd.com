@@ -1,0 +1,81 @@
+/* Sheep Crush — Mobile-first styles */
+:root {
+  --cream: #F6F4EF;
+  --olive: #7A7F6A;
+  --rust: #B85C38;
+  --sky: #6FA9D8;
+  --charcoal: #1F1F1D;
+  --wheat: #C8B27A;
+  --bell: #6B5E4A;
+
+  --tile-size: 44px; /* mobile base */
+  --tile-gap: 6px;
+  --radius: 10px;
+}
+
+.sc-container { padding: 1rem; }
+.sc-header { text-align: center; margin-bottom: 1rem; }
+.sc-title { font-family: 'Libre Baskerville', serif; font-weight: 700; color: var(--charcoal); }
+.sc-subtitle { color: var(--olive); font-style: italic; }
+.sc-toolbar { display: flex; justify-content: center; gap: 1rem; align-items: center; margin-top: .5rem; }
+.sc-score { font-weight: 500; color: var(--charcoal); }
+
+.sc-board-wrap { max-width: 480px; margin: 0 auto; }
+.sc-board {
+  display: grid;
+  grid-template-columns: repeat(8, var(--tile-size));
+  grid-template-rows: repeat(8, var(--tile-size));
+  gap: var(--tile-gap);
+  justify-content: center;
+  margin: 1rem auto;
+}
+
+/* Tiles */
+.sc-tile {
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border-radius: var(--radius);
+  background: var(--cream);
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  color: var(--charcoal);
+  transition: transform 150ms ease, background-color 150ms ease, opacity 200ms ease;
+}
+.sc-tile:focus { outline: 2px solid var(--olive); outline-offset: 2px; }
+.sc-tile.selected { transform: scale(0.95); background: #ECE8DF; }
+.sc-tile.swap-preview { transform: scale(1.05); }
+.sc-tile.clearing { opacity: 0.2; }
+
+/* Tile types */
+.tile-sheep-cream { background: var(--cream); }
+.tile-sheep-olive { background: #9AA887; }
+.tile-sheep-rust  { background: #D67851; }
+.tile-sheep-sky   { background: #93C2E6; }
+.tile-sheep-dark  { background: #3A3A38; color: #F6F4EF; }
+.tile-bell        { background: var(--bell); color: #ECE8DF; }
+.tile-wheat       { background: var(--wheat); color: var(--charcoal); }
+
+/* Simple glyphs (geometric shapes) */
+.glyph { display: block; width: 60%; height: 60%; border-radius: 6px; }
+.glyph.circle { border-radius: 50%; background: currentColor; }
+.glyph.square { background: currentColor; }
+.glyph.ring { border: 3px solid currentColor; border-radius: 50%; background: transparent; }
+.glyph.bar { width: 70%; height: 20%; background: currentColor; border-radius: 4px; }
+
+/* Instructions */
+.sc-instructions { text-align: center; color: var(--charcoal); font-size: .9rem; }
+
+/* Buttons */
+.btn { padding: .6rem .9rem; border-radius: 8px; border: 1px solid var(--charcoal); background: var(--charcoal); color: var(--cream); }
+.btn-secondary { background: var(--charcoal); border-color: var(--charcoal); }
+.btn-secondary:hover { background: var(--olive); border-color: var(--olive); }
+
+/* Larger screens */
+@media (min-width: 768px) {
+  :root { --tile-size: 54px; --tile-gap: 8px; }
+}
+@media (min-width: 1024px) {
+  :root { --tile-size: 60px; --tile-gap: 10px; }
+  .sc-board-wrap { max-width: 560px; }
+}

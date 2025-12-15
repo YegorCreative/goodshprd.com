@@ -5,6 +5,264 @@
  */
 
 /* ========================================
+   Global Rounded Corners
+   ======================================== */
+
+button,
+input,
+textarea,
+select,
+img,
+.product-card,
+.form-group {
+    border-radius: 25px;
+}
+
+/* ========================================
+   Find the Sheep Game Styles
+   ======================================== */
+
+.game-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    background-color: #F6F4EF;
+}
+
+.game-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.game-state {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.game-state.hidden {
+    display: none;
+}
+
+/* Entry State */
+.game-intro {
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+.game-intro h1 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-family: 'Libre Baskerville', serif;
+    color: #1F1F1D;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.game-subtitle {
+    font-size: clamp(1.125rem, 4vw, 1.5rem);
+    color: #6B5E4A;
+    font-weight: 300;
+    margin-bottom: 2rem;
+    font-style: italic;
+}
+
+.intro-text {
+    margin: 2rem 0;
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: #1F1F1D;
+}
+
+.intro-text p {
+    margin-bottom: 1rem;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+}
+
+#beginBtn {
+    margin-top: 2rem;
+    min-width: 200px;
+}
+
+/* Photo State */
+.photo-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.game-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.sheep-target {
+    position: absolute;
+    cursor: pointer;
+    opacity: 0;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.sheep-target:hover {
+    border-color: rgba(107, 94, 74, 0.2);
+}
+
+.sheep-overlay {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(246, 244, 239, 0.95);
+    animation: revealSheep 0.4s ease;
+}
+
+@keyframes revealSheep {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.sheep-overlay.hidden {
+    display: none;
+}
+
+.sheep-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 4px rgba(31, 31, 29, 0.1));
+}
+
+/* Found State */
+.found-content {
+    padding: 2rem 1rem;
+    background: #ECE8DF;
+    border-radius: 25px;
+}
+
+.found-text {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-family: 'Libre Baskerville', serif;
+    color: #1F1F1D;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 400;
+}
+
+.location-guess {
+    margin-top: 2rem;
+}
+
+.location-question {
+    font-size: 1rem;
+    color: #1F1F1D;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.location-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.btn-location {
+    padding: 1rem;
+    font-size: 0.95rem;
+    background-color: #F6F4EF;
+    color: #1F1F1D;
+    border: 1px solid #ECE8DF;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-location:hover {
+    background-color: #ECE8DF;
+    border-color: #6B5E4A;
+}
+
+.btn-location:active {
+    background-color: #6B5E4A;
+    color: #F6F4EF;
+}
+
+/* Reveal State */
+.reveal-content {
+    padding: 2rem 1rem;
+    background: #ECE8DF;
+    border-radius: 25px;
+    text-align: center;
+}
+
+.location-reveal {
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
+    font-family: 'Libre Baskerville', serif;
+    color: #1F1F1D;
+    margin-bottom: 2rem;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+.game-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.btn-secondary {
+    background-color: #1F1F1D;
+    color: #F6F4EF;
+    border: 1px solid #1F1F1D;
+}
+
+.btn-secondary:hover {
+    background-color: #6B5E4A;
+    border-color: #6B5E4A;
+}
+
+/* Tablet and Desktop */
+@media (min-width: 768px) {
+    .game-container {
+        padding: 3rem 2rem;
+    }
+
+    .game-intro {
+        padding: 6rem 2rem;
+    }
+
+    .location-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .game-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .game-container {
+        padding: 4rem;
+    }
+
+    .photo-wrapper {
+        aspect-ratio: 16/9;
+    }
+
+    .location-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ========================================
    iOS Safari Specific Fixes
    ======================================== */
 

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Book an appointment at Good Shepherd — Personal shopping experience for vintage clothing">
+    <title>Book Appointment | Good Shepherd</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    
+    <!-- Header / Navigation -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="wordmark">
+                    <a href="index.html">
+                        <img src="img/shepherd-icon.png" alt="Good Shepherd" class="wordmark-icon">
+                        <span>Good Shepherd</span>
+                    </a>
+                </h1>
+                
+                <!-- Mobile Menu Toggle -->
+                <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                    <span class="nav-toggle-icon"></span>
+                </button>
+                
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="shop.html">Shop</a></li>
+                        <li><a href="appointments.html" aria-current="page">Appointments</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="sheep-crush.html">Sheep Crush</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        
+        <!-- Appointments Hero -->
+        <section class="page-hero">
+            <div class="container">
+                <h2 class="page-title">Book an Appointment</h2>
+                <p class="page-subtitle">Experience our collection in person with one-on-one attention and personalized guidance</p>
+            </div>
+        </section>
+
+        <!-- Appointments Info -->
+        <section class="appointments-info">
+            <div class="container">
+                <div class="info-content">
+                    <h3>What to Expect</h3>
+                    <p>
+                        At Good Shepherd, we believe shopping should be personal and unhurried. 
+                        Book a private appointment to browse our curated collection, try pieces on, 
+                        and receive guidance on fit, care, and styling.
+                    </p>
+                    <p>
+                        Each appointment is 60 minutes and available Tuesday through Saturday. 
+                        We're located in Minneapolis, Minnesota.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Booking Form -->
+        <section class="booking-section">
+            <div class="container">
+                <form class="booking-form" action="#" method="post">
+                    
+                    <div class="form-group">
+                        <label for="name" class="form-label">Full Name <span class="required">*</span></label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            class="form-input" 
+                            required
+                            autocomplete="name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input" 
+                            required
+                            autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone Number <span class="required">*</span></label>
+                        <input 
+                            type="tel" 
+                            id="phone" 
+                            name="phone" 
+                            class="form-input" 
+                            required
+                            autocomplete="tel">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date" class="form-label">Preferred Date <span class="required">*</span></label>
+                        <input 
+                            type="date" 
+                            id="date" 
+                            name="date" 
+                            class="form-input" 
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="time" class="form-label">Preferred Time <span class="required">*</span></label>
+                        <select id="time" name="time" class="form-select" required>
+                            <option value="">Select a time</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                            <option value="17:00">5:00 PM</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="interest" class="form-label">What are you looking for?</label>
+                        <select id="interest" name="interest" class="form-select">
+                            <option value="">Browse all</option>
+                            <option value="outerwear">Outerwear</option>
+                            <option value="shirts">Shirts</option>
+                            <option value="pants">Pants</option>
+                            <option value="accessories">Accessories</option>
+                            <option value="unsure">Not sure yet</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Additional Notes</label>
+                        <textarea 
+                            id="notes" 
+                            name="notes" 
+                            class="form-textarea" 
+                            rows="4"
+                            placeholder="Any specific questions or requests?"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="button button-primary">Request Appointment</button>
+                        <p class="form-note">We'll confirm your appointment within 24 hours</p>
+                    </div>
+
+                </form>
+            </div>
+        </section>
+
+        <!-- Appointments CTA -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h3 class="cta-headline">Questions about appointments?</h3>
+                    <p class="cta-text">
+                        Feel free to reach out if you have any questions about our appointment process or what to expect.
+                    </p>
+                    <div class="cta-actions">
+                        <a href="contact.html" class="button button-secondary">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h2 class="footer-wordmark">Good Shepherd</h2>
+                    <p class="footer-tagline">Vintage & restored with intention</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><a href="shop.html">All Items</a></li>
+                            <li><a href="shop.html">Outerwear</a></li>
+                            <li><a href="shop.html">Shirts</a></li>
+                            <li><a href="shop.html">Accessories</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Visit</h4>
+                        <ul>
+                            <li><a href="appointments.html">Book Appointment</a></li>
+                            <li><a href="about.html">Our Story</a></li>
+                            <li><a href="sheep-crush.html">Sheep Crush</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Connect</h4>
+                        <ul>
+                            <li><a href="contact.html">Contact</a></li>
+                            <li><a href="#instagram">Instagram</a></li>
+                            <li><a href="#newsletter">Newsletter</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Good Shepherd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/script.js"></script>
+
+</body>
+</html>
