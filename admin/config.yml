@@ -2,15 +2,14 @@
 # 
 # This file configures the admin interface for managing shop products.
 # Products are stored as JSON files in /content/products/
-# Authentication uses Netlify Identity + Git Gateway
+# Authentication uses GitHub OAuth (no Netlify required)
 
 backend:
-  # GitHub backend with Netlify Git Gateway
-  name: git-gateway
-  branch: main
+  # GitHub backend with OAuth authentication
+  name: github
   repo: yegorhambaryan/goodshprd.com
+  branch: main
   base_path: /admin
-  auth_endpoint: /api/auth
   squash_merges: true
   commit_messages:
     create: 'Add product: {{slug}}'
