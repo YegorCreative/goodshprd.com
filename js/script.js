@@ -1,7 +1,7 @@
 /**
  * Good Shepherd Website JavaScript
- * Minimal, progressive enhancements
- * Maintains editorial, calm aesthetic
+ * Mobile-First Progressive Enhancements
+ * Minimal, calm, intentional interactions
  */
 
 (function() {
@@ -12,17 +12,49 @@
     // ========================================
     
     /**
-     * Placeholder for mobile navigation toggle functionality
-     * Currently navigation is always visible
-     * Can be extended to add a hamburger menu for mobile
+     * Hamburger menu toggle for mobile navigation
+     * Shows/hides navigation on mobile devices
      */
     function initMobileNav() {
-        // Future implementation:
-        // - Add hamburger button to HTML
-        // - Toggle .nav-open class on body
-        // - Smooth transitions for menu open/close
+        const navToggle = document.querySelector('.nav-toggle');
+        const body = document.body;
         
-        console.log('Mobile navigation ready');
+        if (!navToggle) {
+            console.warn('Navigation toggle button not found');
+            return;
+        }
+
+        navToggle.addEventListener('click', function() {
+            const isOpen = body.classList.contains('nav-open');
+            
+            // Toggle open state
+            body.classList.toggle('nav-open');
+            
+            // Update ARIA attribute for accessibility
+            this.setAttribute('aria-expanded', !isOpen);
+        });
+
+        // Close menu when navigation link is clicked
+        const navLinks = document.querySelectorAll('.main-nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                body.classList.remove('nav-open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const isNavToggle = e.target.closest('.nav-toggle');
+            const isNavMenu = e.target.closest('.main-nav');
+            
+            if (!isNavToggle && !isNavMenu && body.classList.contains('nav-open')) {
+                body.classList.remove('nav-open');
+                navToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        console.log('Mobile navigation initialized');
     }
 
     // ========================================
@@ -31,29 +63,41 @@
     
     /**
      * Enhance anchor link behavior with smooth scrolling
-     * Already handled by CSS scroll-behavior, but can be extended
+     * Adds offset for sticky header
      */
     function initSmoothScroll() {
         const links = document.querySelectorAll('a[href^="#"]');
+        const header = document.querySelector('.site-header');
+        const headerHeight = header ? header.offsetHeight : 0;
         
         links.forEach(link => {
             link.addEventListener('click', function(e) {
                 const targetId = this.getAttribute('href');
                 
                 // Skip if just #
-                if (targetId === '#') return;
+                if (targetId === '#' || targetId === '#home') {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
                 
                 const targetElement = document.querySelector(targetId);
                 
                 if (targetElement) {
                     e.preventDefault();
-                    targetElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
+                    
+                    // Calculate position with header offset
+                    const targetPosition = targetElement.offsetTop - headerHeight - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
                     });
                 }
             });
         });
+
+        console.log('Smooth scroll initialized');
     }
 
     // ========================================
@@ -61,15 +105,48 @@
     // ========================================
     
     /**
-     * Placeholder for lazy loading images
-     * When real images are added to /img/ folder
+     * Progressive image loading using Intersection Observer
+     * Loads images when they enter viewport
      */
     function initLazyLoad() {
-        // Future implementation:
-        // - Add loading="lazy" to img tags
-        // - Or use Intersection Observer for custom lazy loading
+        // Check for images with data-src attribute
+        const lazyImages = document.querySelectorAll('img[data-src]');
         
-        console.log('Image lazy loading ready');
+        if (lazyImages.length === 0) {
+            return; // No lazy images to load
+        }
+
+        // Check for Intersection Observer support
+        if ('IntersectionObserver' in window) {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        observer.unobserve(img);
+                    }
+                });
+            });
+
+            lazyImages.forEach(img => imageObserver.observe(img));
+            console.log('Lazy loading initialized');
+        } else {
+            // Fallback: Load all images immediately
+            lazyImages.forEach(img => {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            });
+        }
+    }
+
+    // ========================================
+    // Remove no-js class if JavaScript is enabled
+    // ========================================
+    
+    function removeNoJsClass() {
+        document.documentElement.classList.remove('no-js');
+        document.documentElement.classList.add('js');
     }
 
     // ========================================
@@ -77,11 +154,12 @@
     // ========================================
     
     document.addEventListener('DOMContentLoaded', function() {
+        removeNoJsClass();
         initMobileNav();
         initSmoothScroll();
         initLazyLoad();
         
-        console.log('Good Shepherd website initialized');
+        console.log('✓ Good Shepherd website initialized');
     });
 
 })();

@@ -1,183 +1,37 @@
 /*
- * Good Shepherd Mobile Styles
- * Mobile-specific overrides for screens ≤ 768px
- * Loaded after styles.css to override desktop defaults
+ * Good Shepherd Mobile Micro-Fixes
+ * Minimal overrides only for edge cases
+ * Base mobile styles are in styles.css
  */
 
 /* ========================================
-   Mobile Layout Adjustments (≤ 768px)
+   iOS Safari Specific Fixes
    ======================================== */
 
+/* Prevent iOS zoom on input focus */
 @media (max-width: 768px) {
-    
-    /* ========================================
-       Typography
-       ======================================== */
-    
-    h2 {
-        font-size: 2.5rem;
+    input,
+    textarea,
+    select {
+        font-size: 16px; /* Prevents iOS zoom */
     }
+}
 
-    h3 {
-        font-size: 1.5rem;
-    }
-
-    /* ========================================
-       Layout Utilities
-       ======================================== */
-    
-    .container {
-        padding: 0 1.5rem;
-    }
-
-    /* ========================================
-       Header & Navigation
-       ======================================== */
-    
-    .header-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-    }
-
-    .main-nav ul {
-        justify-content: center;
-        gap: 1rem;
-        font-size: 0.9rem;
-    }
-
-    /* ========================================
-       Hero Section
-       ======================================== */
-    
-    .hero {
-        padding: 4rem 0 5rem;
-    }
-
-    .hero-headline {
-        font-size: 2.5rem;
-        line-height: 1.2;
-    }
-
-    .hero-subheadline {
-        font-size: 1.0625rem;
-        margin-bottom: 2rem;
-    }
-
-    .hero-actions {
-        flex-direction: column;
-        gap: 0.75rem;
-        width: 100%;
-    }
-
-    .hero-actions .button {
-        width: 100%;
-        max-width: 320px;
-    }
-
-    /* ========================================
-       Featured Products Section
-       ======================================== */
-    
-    .featured-products {
-        padding: 4rem 0;
-    }
-
-    .section-title {
-        font-size: 1.75rem;
-        margin-bottom: 2.5rem;
-    }
-
-    .products-grid {
-        grid-template-columns: 1fr;
-        gap: 3rem;
-    }
-
-    /* ========================================
-       About Section
-       ======================================== */
-    
-    .about-section {
-        padding: 4rem 0;
-    }
-
-    .about-text {
-        font-size: 1rem;
-    }
-
-    /* ========================================
-       Gallery Section
-       ======================================== */
-    
-    .gallery-section {
-        padding: 4rem 0;
-    }
-
-    .gallery-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    /* ========================================
-       Call to Action Section
-       ======================================== */
-    
-    .cta-section {
-        padding: 4rem 0;
-    }
-
-    .cta-headline {
-        font-size: 1.75rem;
-    }
-
-    .cta-text {
-        font-size: 1rem;
-    }
-
-    /* ========================================
-       Footer
-       ======================================== */
-    
-    .site-footer {
-        padding: 3rem 0 2rem;
-    }
-
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-        margin-bottom: 2.5rem;
-    }
-
-    .footer-links {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .footer-bottom {
-        padding-top: 1.5rem;
+/* Fix for iOS safe area (if needed) */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .site-header {
+        padding-top: max(1rem, env(safe-area-inset-top));
     }
 }
 
 /* ========================================
-   Extra Small Mobile (≤ 480px)
+   Ensure Mobile Navigation Remains Visible
+   When JavaScript Fails
    ======================================== */
 
+/* Fallback: If JS doesn't load, show nav on very small screens */
 @media (max-width: 480px) {
-    
-    .hero-headline {
-        font-size: 2rem;
-    }
-
-    .section-title {
-        font-size: 1.5rem;
-    }
-
-    .container {
-        padding: 0 1rem;
-    }
-
-    .main-nav ul {
-        gap: 0.75rem;
-        font-size: 0.85rem;
+    .no-js .main-nav {
+        max-height: none;
     }
 }

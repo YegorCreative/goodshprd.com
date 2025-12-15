@@ -1,7 +1,12 @@
 /*
  * Good Shepherd Website Styles
- * Editorial, minimal design with warm neutrals
- * Base styles for all screen sizes
+ * Mobile-First Editorial Design
+ * Warm neutrals, generous spacing, timeless aesthetic
+ * 
+ * Structure:
+ * - Base styles = mobile (default)
+ * - @media (min-width: 768px) = tablet
+ * - @media (min-width: 1024px) = desktop
  */
 
 /* ========================================
@@ -15,7 +20,7 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: 100%; /* 16px base, allows user preference */
     scroll-behavior: smooth;
 }
 
@@ -29,8 +34,14 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
 /* ========================================
-   Typography
+   Typography (Mobile-First)
    ======================================== */
 
 h1, h2, h3, h4, h5, h6 {
@@ -40,25 +51,27 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 1rem;
 }
 
+/* Mobile typography - using clamp() for fluid scaling */
 h1 {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 4vw, 2rem);
 }
 
 h2 {
-    font-size: 3rem;
+    font-size: clamp(2rem, 6vw, 2.5rem);
 }
 
 h3 {
-    font-size: 1.75rem;
+    font-size: clamp(1.5rem, 4vw, 1.75rem);
 }
 
 h4 {
-    font-size: 1.25rem;
+    font-size: clamp(1.125rem, 3vw, 1.25rem);
 }
 
 p {
     margin-bottom: 1rem;
     line-height: 1.7;
+    font-size: clamp(1rem, 2vw, 1.0625rem);
 }
 
 a {
@@ -67,28 +80,29 @@ a {
     transition: opacity 0.2s ease;
 }
 
-a:hover {
+a:hover,
+a:focus {
     opacity: 0.7;
 }
 
 /* ========================================
-   Layout Utilities
+   Layout Utilities (Mobile-First)
    ======================================== */
 
 .container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 1rem; /* Mobile: 16px sides */
 }
 
 /* ========================================
-   Header & Navigation
+   Header & Navigation (Mobile-First)
    ======================================== */
 
 .site-header {
     background-color: #F6F4EF;
-    padding: 1.5rem 0;
+    padding: 1rem 0;
     border-bottom: 1px solid #ECE8DF;
     position: sticky;
     top: 0;
@@ -99,74 +113,166 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    position: relative;
 }
 
 .wordmark {
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     font-weight: 400;
     letter-spacing: 0.02em;
     margin: 0;
+    z-index: 101;
+}
+
+/* Mobile Navigation Toggle (Hamburger) */
+.nav-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px; /* Minimum tap target */
+    height: 44px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 101;
+}
+
+.nav-toggle-icon,
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background-color: #1F1F1D;
+    transition: all 0.3s ease;
+}
+
+.nav-toggle-icon {
+    position: relative;
+}
+
+.nav-toggle-icon::before,
+.nav-toggle-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+}
+
+.nav-toggle-icon::before {
+    top: -7px;
+}
+
+.nav-toggle-icon::after {
+    top: 7px;
+}
+
+/* Hamburger animation when open */
+.nav-open .nav-toggle-icon {
+    background-color: transparent;
+}
+
+.nav-open .nav-toggle-icon::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.nav-open .nav-toggle-icon::after {
+    transform: rotate(-45deg);
+    top: 0;
+}
+
+/* Mobile Navigation - Hidden by default */
+.main-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #F6F4EF;
+    border-bottom: 1px solid #ECE8DF;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.nav-open .main-nav {
+    max-height: 400px;
 }
 
 .main-nav ul {
     display: flex;
+    flex-direction: column;
     list-style: none;
-    gap: 1.5rem;
-    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+}
+
+.main-nav li {
+    border-bottom: 1px solid #ECE8DF;
+}
+
+.main-nav li:last-child {
+    border-bottom: none;
 }
 
 .main-nav a {
+    display: block;
+    padding: 1rem 1rem;
     font-size: 0.95rem;
     font-weight: 400;
     letter-spacing: 0.02em;
+    text-align: center;
+    min-height: 44px; /* Tap target */
 }
 
 /* ========================================
-   Hero Section
+   Hero Section (Mobile-First)
    ======================================== */
 
 .hero {
-    padding: 6rem 0 7rem;
+    padding: 3rem 0 4rem;
     background-color: #F6F4EF;
 }
 
 .hero-content {
-    max-width: 800px;
+    max-width: 100%;
     margin: 0 auto;
     text-align: center;
 }
 
 .hero-headline {
-    font-size: 4rem;
+    font-size: clamp(2rem, 8vw, 3rem);
     line-height: 1.2;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     font-weight: 400;
 }
 
 .hero-subheadline {
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 4vw, 1.125rem);
     line-height: 1.7;
     color: #6B5E4A;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     font-weight: 300;
 }
 
 .hero-actions {
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
 }
 
 /* ========================================
-   Buttons
+   Buttons (Mobile-First)
    ======================================== */
 
 .button {
     display: inline-block;
-    padding: 0.875rem 2rem;
+    width: 100%; /* Full width on mobile */
+    max-width: 320px;
+    min-height: 44px; /* Tap target */
+    padding: 0.875rem 1.5rem;
     font-size: 0.95rem;
     font-weight: 400;
     letter-spacing: 0.03em;
@@ -181,7 +287,8 @@ a:hover {
     color: #F6F4EF;
 }
 
-.button-primary:hover {
+.button-primary:hover,
+.button-primary:focus {
     background-color: #6B5E4A;
     border-color: #6B5E4A;
     opacity: 1;
@@ -192,30 +299,31 @@ a:hover {
     color: #1F1F1D;
 }
 
-.button-secondary:hover {
+.button-secondary:hover,
+.button-secondary:focus {
     background-color: #ECE8DF;
     opacity: 1;
 }
 
 /* ========================================
-   Featured Products Section
+   Featured Products Section (Mobile-First)
    ======================================== */
 
 .featured-products {
-    padding: 6rem 0;
+    padding: 3rem 0;
     background-color: #F6F4EF;
 }
 
 .section-title {
     text-align: center;
-    margin-bottom: 3rem;
-    font-size: 2rem;
+    margin-bottom: 2rem;
+    font-size: clamp(1.5rem, 5vw, 2rem);
     font-weight: 400;
 }
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr; /* Single column on mobile */
     gap: 2.5rem;
 }
 
@@ -229,7 +337,7 @@ a:hover {
 }
 
 .product-image {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     overflow: hidden;
 }
 
@@ -249,7 +357,7 @@ a:hover {
 }
 
 .product-name {
-    font-size: 1.25rem;
+    font-size: clamp(1.125rem, 3vw, 1.25rem);
     margin-bottom: 0.5rem;
 }
 
@@ -267,21 +375,21 @@ a:hover {
 }
 
 /* ========================================
-   About Section
+   About Section (Mobile-First)
    ======================================== */
 
 .about-section {
-    padding: 6rem 0;
+    padding: 3rem 0;
     background-color: #ECE8DF;
 }
 
 .about-content {
-    max-width: 700px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
 .about-text {
-    font-size: 1.0625rem;
+    font-size: clamp(1rem, 2.5vw, 1.0625rem);
     line-height: 1.8;
 }
 
@@ -290,26 +398,29 @@ a:hover {
     margin-top: 1rem;
     font-weight: 500;
     color: #6B5E4A;
+    min-height: 44px; /* Tap target */
+    line-height: 44px;
 }
 
-.text-link:hover {
+.text-link:hover,
+.text-link:focus {
     opacity: 1;
     text-decoration: underline;
 }
 
 /* ========================================
-   Gallery Section
+   Gallery Section (Mobile-First)
    ======================================== */
 
 .gallery-section {
-    padding: 6rem 0;
+    padding: 3rem 0;
     background-color: #F6F4EF;
 }
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 1rem;
 }
 
 .gallery-item {
@@ -317,6 +428,7 @@ a:hover {
 }
 
 .gallery-image {
+    width: 100%;
     aspect-ratio: 4 / 3;
     transition: transform 0.3s ease;
 }
@@ -326,30 +438,30 @@ a:hover {
 }
 
 /* ========================================
-   Call to Action Section
+   Call to Action Section (Mobile-First)
    ======================================== */
 
 .cta-section {
-    padding: 6rem 0;
+    padding: 3rem 0;
     background-color: #ECE8DF;
 }
 
 .cta-content {
-    max-width: 600px;
+    max-width: 100%;
     margin: 0 auto;
     text-align: center;
 }
 
 .cta-headline {
-    font-size: 2rem;
-    margin-bottom: 1.25rem;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin-bottom: 1rem;
 }
 
 .cta-text {
-    font-size: 1.0625rem;
+    font-size: clamp(1rem, 2.5vw, 1.0625rem);
     line-height: 1.7;
     color: #6B5E4A;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .cta-actions {
@@ -358,24 +470,24 @@ a:hover {
 }
 
 /* ========================================
-   Footer
+   Footer (Mobile-First)
    ======================================== */
 
 .site-footer {
     background-color: #1F1F1D;
     color: #ECE8DF;
-    padding: 4rem 0 2rem;
+    padding: 3rem 0 2rem;
 }
 
 .footer-content {
     display: grid;
-    grid-template-columns: 1.5fr 2fr;
-    gap: 3rem;
-    margin-bottom: 3rem;
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 2rem;
+    margin-bottom: 2rem;
 }
 
 .footer-wordmark {
-    font-size: 1.5rem;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     margin-bottom: 0.5rem;
     color: #F6F4EF;
 }
@@ -388,7 +500,7 @@ a:hover {
 
 .footer-links {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr; /* Single column on mobile */
     gap: 2rem;
 }
 
@@ -406,16 +518,19 @@ a:hover {
 }
 
 .footer-column li {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .footer-column a {
+    display: inline-block;
     font-size: 0.95rem;
     color: #ECE8DF;
+    min-height: 44px; /* Tap target */
+    line-height: 44px;
 }
 
 .footer-bottom {
-    padding-top: 2rem;
+    padding-top: 1.5rem;
     border-top: 1px solid #6B5E4A;
     text-align: center;
 }
@@ -427,41 +542,150 @@ a:hover {
 }
 
 /* ========================================
-   Tablet Styles (≥ 768px)
+   Tablet Styles (min-width: 768px)
    ======================================== */
 
 @media (min-width: 768px) {
-    /* Products grid: 2 columns on tablet */
+    /* Layout */
+    .container {
+        padding: 0 1.5rem;
+    }
+
+    /* Header & Navigation */
+    .nav-toggle {
+        display: none; /* Hide hamburger on tablet+ */
+    }
+
+    .main-nav {
+        position: static;
+        max-height: none;
+        border-bottom: none;
+    }
+
+    .main-nav ul {
+        flex-direction: row;
+        gap: 1.5rem;
+    }
+
+    .main-nav li {
+        border-bottom: none;
+    }
+
+    .main-nav a {
+        padding: 0.5rem 0;
+    }
+
+    /* Hero */
+    .hero {
+        padding: 4rem 0 5rem;
+    }
+
+    .hero-content {
+        max-width: 700px;
+    }
+
+    .hero-actions {
+        flex-direction: row;
+        gap: 1rem;
+    }
+
+    /* Buttons */
+    .button {
+        width: auto;
+        padding: 0.875rem 2rem;
+    }
+
+    /* Products grid: 2 columns */
     .products-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 2.5rem;
     }
 
-    /* Gallery grid: 2 columns on tablet */
+    /* Gallery grid: 2 columns */
     .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 1.5rem;
     }
+
+    /* About */
+    .about-content {
+        max-width: 700px;
+    }
+
+    /* CTA */
+    .cta-content {
+        max-width: 600px;
+    }
+
+    /* Footer */
+    .footer-content {
+        grid-template-columns: 1.5fr 2fr;
+        gap: 3rem;
+    }
+
+    .footer-links {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 /* ========================================
-   Desktop Styles (≥ 1024px)
+   Desktop Styles (min-width: 1024px)
    ======================================== */
 
 @media (min-width: 1024px) {
-    /* Products grid: 3 columns on desktop */
+    /* Layout */
+    .container {
+        padding: 0 2rem;
+    }
+
+    /* Header */
+    .site-header {
+        padding: 1.5rem 0;
+    }
+
+    /* Hero */
+    .hero {
+        padding: 6rem 0 7rem;
+    }
+
+    .hero-content {
+        max-width: 800px;
+    }
+
+    /* Section spacing */
+    .featured-products,
+    .about-section,
+    .gallery-section,
+    .cta-section {
+        padding: 6rem 0;
+    }
+
+    /* Products grid: 3 columns */
     .products-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 
-    /* Gallery grid: 4 columns on desktop */
+    /* Gallery grid: 4 columns */
     .gallery-grid {
         grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* Footer */
+    .site-footer {
+        padding: 4rem 0 2rem;
+    }
+
+    .footer-content {
+        margin-bottom: 3rem;
+    }
+
+    .footer-bottom {
+        padding-top: 2rem;
     }
 }
 
 /* ========================================
-   Large Desktop Styles (≥ 1440px)
+   Large Desktop Styles (min-width: 1440px)
    ======================================== */
 
 @media (min-width: 1440px) {
