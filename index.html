@@ -26,8 +26,10 @@
         <div class="container">
             <div class="header-content">
                 <h1 class="wordmark">
-                    <img src="img/shepherd-icon.png" alt="Good Shepherd" class="wordmark-icon">
-                    <span>Good Shepherd</span>
+                    <a href="index.html" aria-label="Good Shepherd home">
+                        <img src="img/shepherd-icon.png" alt="Good Shepherd" class="wordmark-icon">
+                        <span>Good Shepherd</span>
+                    </a>
                 </h1>
                 
                 <!-- Mobile Menu Toggle -->
@@ -68,7 +70,7 @@
         </section>
 
         <!-- Featured Products Section -->
-        <section class="featured-products">
+        <section id="shop" class="featured-products">
             <div class="container">
                 <h3 class="section-title">Featured Pieces</h3>
                 <div class="products-grid">
@@ -150,7 +152,7 @@
         </section>
 
         <!-- About Section -->
-        <section class="about-section">
+        <section id="about" class="about-section">
             <div class="container">
                 <div class="about-content">
                     <h3 class="section-title">Our Story</h3>
@@ -173,7 +175,7 @@
         </section>
 
         <!-- Image Gallery / Credibility Section -->
-        <section class="gallery-section">
+        <section id="instagram" class="gallery-section">
             <div class="container">
                 <h3 class="section-title">Craftsmanship in Detail</h3>
                 <div class="gallery-grid">
@@ -194,7 +196,7 @@
         </section>
 
         <!-- Call to Action -->
-        <section class="cta-section">
+        <section id="newsletter" class="cta-section">
             <div class="container">
                 <div class="cta-content">
                     <h3 class="cta-headline">Start your own story</h3>
@@ -205,6 +207,34 @@
                     <div class="cta-actions">
                         <a href="#shop" class="button button-primary">Browse Collection</a>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Appointments Section -->
+        <section id="appointments" class="appointments-section">
+            <div class="container">
+                <div class="appointments-content">
+                    <h3 class="section-title">Book a Personal Visit</h3>
+                    <p>
+                        Schedule a time to explore our collection in person. We offer personalized consultations 
+                        for styling advice and restoration questions.
+                    </p>
+                    <a href="appointments.html" class="button button-primary">Book Appointment</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section-home">
+            <div class="container">
+                <div class="contact-content">
+                    <h3 class="section-title">Get in Touch</h3>
+                    <p>
+                        Have questions about our pieces or need restoration advice? 
+                        Reach out anytime — we'd love to hear from you.
+                    </p>
+                    <a href="contact.html" class="button button-secondary">Contact Us</a>
                 </div>
             </div>
         </section>
@@ -255,6 +285,11 @@
 
     <!-- JavaScript -->
     <script src="js/script.js"></script>
+
+    <!-- Back To Top Button -->
+    <button class="back-to-top" aria-label="Back to top">
+        <img src="img/to-top.png" alt="Back to top">
+    </button>
 
 </body>
 </html>

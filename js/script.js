@@ -169,6 +169,42 @@
     }
 
     // ========================================
+    // Back To Top Button
+    // ========================================
+    function initBackToTop() {
+        const btn = document.querySelector('.back-to-top');
+        if (!btn) return;
+
+        const showThreshold = 200; // px scrolled
+        const onScroll = () => {
+            const y = window.scrollY || document.documentElement.scrollTop;
+            if (y > showThreshold) {
+                btn.classList.add('is-visible');
+            } else {
+                btn.classList.remove('is-visible');
+            }
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Keyboard accessibility
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+
+        // Initial state
+        onScroll();
+    }
+
+    // ========================================
     // Initialize on DOM Ready
     // ========================================
     
@@ -177,6 +213,7 @@
         initMobileNav();
         initSmoothScroll();
         initLazyLoad();
+        initBackToTop();
         
         console.log('✓ Good Shepherd website initialized');
     });

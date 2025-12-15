@@ -1,103 +1,135 @@
 <!DOCTYPE html>
 <html lang="en" class="no-js">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sheep Crush — a clean, mobile-first match-3 game by Good Shepherd">
-  <title>Sheep Crush | Good Shepherd</title>
-  <link rel="icon" type="image/png" href="img/favicon.png">
-  <link rel="apple-touch-icon" href="img/favicon.png">
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/mobile.css">
-  <link rel="stylesheet" href="css/sheep-crush.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sheep Crush — a clean, mobile-first match-3 game by Good Shepherd">
+    <title>Sheep Crush | Good Shepherd</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/favicon.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/sheep-crush.css">
 </head>
 <body>
-  <header class="site-header" role="banner">
-    <div class="header-container">
-      <div class="wordmark">
-        <a href="index.html">
-          <img src="img/favicon.png" alt="Good Shepherd" class="wordmark-icon">
-          <span>Good Shepherd</span>
-        </a>
-      </div>
-      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <span class="nav-toggle-icon"></span>
-      </button>
-      <nav class="main-nav" aria-label="Main">
-        <ul>
-          <li><a href="index.html">Home</a></li>
-          <li><a href="shop.html">Shop</a></li>
-          <li><a href="about.html">About</a></li>
-          <li><a href="sheep-crush.html" aria-current="page">Sheep Crush</a></li>
-          <li><a href="appointments.html">Appointments</a></li>
-          <li><a href="contact.html">Contact</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <main id="game" class="sc-container" role="main">
-    <section class="sc-header">
-      <h1 class="sc-title">Sheep Crush</h1>
-      <p class="sc-subtitle">Swap tiles. Match 3+. Keep it clean.</p>
-      <div class="sc-toolbar" aria-live="polite">
-        <div class="sc-score">Score: <span id="scScore">0</span></div>
-        <button id="scReset" class="btn btn-secondary" aria-label="Reset game">Reset</button>
-      </div>
-    </section>
-
-    <section class="sc-board-wrap">
-      <div id="scBoard" class="sc-board" aria-label="Match-3 game board" role="grid"></div>
-      <p class="sc-instructions">Tap a tile, then an adjacent tile to swap. If it creates a match of 3 or more, they clear. Special tiles: Bell clears a row. Wheat clears a column.</p>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="footer-container">
-      <div class="footer-content">
-        <div class="footer-wordmark">Good Shepherd</div>
-        <div class="footer-tagline">Minnesota-rooted vintage and restored clothing.</div>
-        <div class="footer-links">
-          <div class="footer-column">
-            <h4>Shop</h4>
-            <ul>
-              <li><a href="shop.html">All Items</a></li>
-              <li><a href="shop.html">New Arrivals</a></li>
-              <li><a href="shop.html">Restored</a></li>
-            </ul>
-          </div>
-          <div class="footer-column">
-            <h4>Visit</h4>
-            <ul>
-              <li><a href="appointments.html">Book Appointment</a></li>
-              <li><a href="about.html">Our Story</a></li>
-              <li><a href="sheep-crush.html">Sheep Crush</a></li>
-            </ul>
-          </div>
-          <div class="footer-column">
-            <h4>Connect</h4>
-            <ul>
-              <li><a href="contact.html">Contact</a></li>
-              <li><a href="#instagram">Instagram</a></li>
-              <li><a href="contact.html">Newsletter</a></li>
-            </ul>
-          </div>
+    
+    <!-- Header / Navigation -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <h1 class="wordmark">
+                    <a href="index.html" aria-label="Good Shepherd home">
+                        <img src="img/shepherd-icon.png" alt="Good Shepherd" class="wordmark-icon">
+                        <span>Good Shepherd</span>
+                    </a>
+                </h1>
+                
+                <!-- Mobile Menu Toggle -->
+                <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+                    <span class="nav-toggle-icon"></span>
+                </button>
+                
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="shop.html">Shop</a></li>
+                        <li><a href="appointments.html">Appointments</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="sheep-crush.html">Sheep Crush</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
         </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2025 Good Shepherd. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
+    </header>
 
-  <script src="js/script.js"></script>
+    <main>
+        <section class="sc-header">
+            <div class="container">
+                <h2 class="section-title">Sheep Crush</h2>
+                <p class="sc-subtitle">Swap tiles. Match 3+. Keep it clean.</p>
+                <div class="sc-toolbar" aria-live="polite">
+                    <div class="sc-score">Score: <span id="scScore">0</span></div>
+                    <button id="scReset" class="button button-secondary" aria-label="Reset game">Reset</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="sc-board-wrap">
+            <div class="container">
+                <div id="scBoard" class="sc-board" aria-label="Match-3 game board" role="grid"></div>
+                <p class="sc-instructions">Tap a tile, then an adjacent tile to swap. If it creates a match of 3 or more, they clear. Special tiles: Bell clears a row. Wheat clears a column.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h2 class="footer-wordmark">Good Shepherd</h2>
+                    <p class="footer-tagline">Vintage & restored with intention</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <ul>
+                            <li><a href="shop.html">All Items</a></li>
+                            <li><a href="shop.html">Outerwear</a></li>
+                            <li><a href="shop.html">Shirts</a></li>
+                            <li><a href="shop.html">Accessories</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Visit</h4>
+                        <ul>
+                            <li><a href="appointments.html">Book Appointment</a></li>
+                            <li><a href="about.html">Our Story</a></li>
+                            <li><a href="sheep-crush.html">Sheep Crush</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Connect</h4>
+                        <ul>
+                            <li><a href="contact.html">Contact</a></li>
+                            <li><a href="#instagram">Instagram</a></li>
+                            <li><a href="#newsletter">Newsletter</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Good Shepherd. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/script.js"></script>
+    <script src="js/sheep-crush.js"></script>
+
+    <!-- Back To Top Button -->
+    <button class="back-to-top" aria-label="Back to top">
+        <img src="img/to-top.png" alt="Back to top">
+    </button>
+
+</body>
+</html>
   <script src="js/sheep-crush.js"></script>
+
+  <!-- Back To Top Button -->
+  <button class="back-to-top" aria-label="Back to top">
+    <img src="img/to-top.png" alt="Back to top">
+  </button>
 </body>
 </html>

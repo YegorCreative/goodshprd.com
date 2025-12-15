@@ -1,81 +1,475 @@
-/* Sheep Crush — Mobile-first styles */
-:root {
-  --cream: #F6F4EF;
-  --olive: #7A7F6A;
-  --rust: #B85C38;
-  --sky: #6FA9D8;
-  --charcoal: #1F1F1D;
-  --wheat: #C8B27A;
-  --bell: #6B5E4A;
+/**
+ * SHEEP CRUSH — Game Board & Tile Styling
+ * Mobile-first, responsive, flat design
+ */
 
-  --tile-size: 44px; /* mobile base */
-  --tile-gap: 6px;
-  --radius: 10px;
+:root {
+    --tile-base: 44px;  /* mobile */
+    --tile-gap: 6px;
+    --radius: 10px;
+    
+    /* Colors */
+    --cream: #F6F4EF;
+    --olive: #7A7F6A;
+    --rust: #B85C38;
+    --sky: #6FA9D8;
+    --dark: #3A3A38;
+    --charcoal: #1F1F1D;
+    --light-bg: #ECE8DF;
 }
 
-.sc-container { padding: 1rem; }
-.sc-header { text-align: center; margin-bottom: 1rem; }
-.sc-title { font-family: 'Libre Baskerville', serif; font-weight: 700; color: var(--charcoal); }
-.sc-subtitle { color: var(--olive); font-style: italic; }
-.sc-toolbar { display: flex; justify-content: center; gap: 1rem; align-items: center; margin-top: .5rem; }
-.sc-score { font-weight: 500; color: var(--charcoal); }
+/* ========================================================================
+   GAME HEADER
+   ======================================================================== */
 
-.sc-board-wrap { max-width: 480px; margin: 0 auto; }
+.sc-header {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.sc-header .section-title {
+    margin-bottom: 0.5rem;
+}
+
+.sc-subtitle {
+    color: var(--olive);
+    font-style: italic;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    margin-bottom: 1rem;
+}
+
+.sc-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.sc-score {
+    font-weight: 600;
+    color: var(--charcoal);
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+/* ========================================================================
+   BOARD CONTAINER
+   ======================================================================== */
+
+.sc-board-wrap {
+    margin: 2rem 0;
+}
+
+.sc-board-wrap .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
 .sc-board {
-  display: grid;
-  grid-template-columns: repeat(8, var(--tile-size));
-  grid-template-rows: repeat(8, var(--tile-size));
-  gap: var(--tile-gap);
-  justify-content: center;
-  margin: 1rem auto;
+    display: grid;
+    grid-template-columns: repeat(8, var(--tile-base));
+    grid-template-rows: repeat(8, var(--tile-base));
+    gap: var(--tile-gap);
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: rgba(236, 232, 223, 0.25);
+    border-radius: 20px;
+    width: 100%;
+    justify-content: center;
+}
+
+/* ========================================================================
+   TILES — Base Styling
+   ======================================================================== */
+
+.sc-tile {
+    width: 100%;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--cream);
+    display: grid;
+    place-items: center;
+    font-size: 1.75rem;
+    cursor: pointer;
+    transition: transform 80ms ease, background-color 80ms ease;
+    position: relative;
+    touch-action: manipulation;
+}
+
+.sc-tile:hover {
+    transform: scale(1.08);
+}
+
+.sc-tile:focus {
+    outline: 2px solid var(--charcoal);
+    outline-offset: -2px;
+}
+
+.sc-tile.selected {
+    outline: 3px solid var(--olive);
+    outline-offset: -1px;
+    transform: scale(0.96);
+    background: var(--light-bg);
+}
+
+/* ========================================================================
+   TILE COLORS — Sheep Types
+   ======================================================================== */
+
+.sc-tile.tile-sheep-cream {
+    background: var(--cream);
+}
+
+.sc-tile.tile-sheep-olive {
+    background: #9AA887;
+}
+
+.sc-tile.tile-sheep-rust {
+    background: #D67851;
+}
+
+.sc-tile.tile-sheep-sky {
+    background: #93C2E6;
+}
+
+.sc-tile.tile-sheep-dark {
+    background: var(--dark);
+    color: var(--cream);
+}
+
+/* ========================================================================
+   SPECIAL TILES
+   ======================================================================== */
+
+.sc-tile.special-row {
+    background: #6B5E4A;
+    color: var(--cream);
+}
+
+.sc-tile.special-col {
+    background: var(--rust);
+    color: var(--cream);
+}
+
+/* ========================================================================
+   TILE STATES
+   ======================================================================== */
+
+.sc-tile.clearing {
+    animation: fadeOut 300ms ease-out forwards;
+}
+
+.sc-tile.falling {
+    animation: fall 300ms ease-in forwards;
+}
+
+/* ========================================================================
+   ANIMATIONS
+   ======================================================================== */
+
+@keyframes swapLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-1 * (var(--tile-base) + var(--tile-gap)))); }
+}
+
+@keyframes swapRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(var(--tile-base) + var(--tile-gap))); }
+}
+
+@keyframes swapUp {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-1 * (var(--tile-base) + var(--tile-gap)))); }
+}
+
+@keyframes swapDown {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(var(--tile-base) + var(--tile-gap))); }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+}
+
+@keyframes fall {
+    from {
+        opacity: 0;
+        transform: translateY(-80px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================================================
+   INSTRUCTIONS & FOOTER
+   ======================================================================== */
+
+.sc-instructions {
+    text-align: center;
+    color: var(--charcoal);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 1rem auto 2rem;
+}
+
+/* ========================================================================
+   RESPONSIVE — Tablet (768px+)
+   ======================================================================== */
+
+@media (min-width: 768px) {
+    :root {
+        --tile-base: 54px;
+        --tile-gap: 8px;
+    }
+    
+    .sc-board {
+        padding: 2rem;
+    }
+    
+    .sc-header {
+        margin: 2.5rem 0;
+    }
+}
+
+/* ========================================================================
+   RESPONSIVE — Desktop (1024px+)
+   ======================================================================== */
+
+@media (min-width: 1024px) {
+    :root {
+        --tile-base: 64px;
+        --tile-gap: 10px;
+    }
+    
+    .sc-board {
+        padding: 2.5rem;
+    }
+    
+    .sc-tile {
+        font-size: 2rem;
+    }
+}
+
+/* Header Section */
+.sc-header {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.sc-header .section-title {
+    margin-bottom: 0.5rem;
+}
+
+.sc-subtitle {
+    color: var(--olive);
+    font-style: italic;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    margin-bottom: 1rem;
+}
+
+/* Toolbar */
+.sc-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.sc-score {
+    font-weight: 600;
+    color: var(--charcoal);
+    font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+/* Board Wrap */
+.sc-board-wrap {
+    margin: 2rem 0;
+}
+
+.sc-board-wrap .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.sc-board {
+    display: grid;
+    grid-template-columns: repeat(8, var(--tile-base));
+    grid-template-rows: repeat(8, var(--tile-base));
+    gap: var(--tile-gap);
+    justify-content: center;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: rgba(236, 232, 223, 0.25);
+    border-radius: 20px;
+    width: 100%;
 }
 
 /* Tiles */
 .sc-tile {
-  width: var(--tile-size);
-  height: var(--tile-size);
-  border-radius: var(--radius);
-  background: var(--cream);
-  display: grid;
-  place-items: center;
-  font-size: 1rem;
-  color: var(--charcoal);
-  transition: transform 150ms ease, background-color 150ms ease, opacity 200ms ease;
+    width: 100%;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--cream);
+    display: grid;
+    place-items: center;
+    font-size: 1.75rem;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: transform 80ms ease, background-color 80ms ease;
+    position: relative;
+    touch-action: manipulation;
 }
-.sc-tile:focus { outline: 2px solid var(--olive); outline-offset: 2px; }
-.sc-tile.selected { transform: scale(0.95); background: #ECE8DF; }
-.sc-tile.swap-preview { transform: scale(1.05); }
-.sc-tile.clearing { opacity: 0.2; }
 
-/* Tile types */
-.tile-sheep-cream { background: var(--cream); }
-.tile-sheep-olive { background: #9AA887; }
-.tile-sheep-rust  { background: #D67851; }
-.tile-sheep-sky   { background: #93C2E6; }
-.tile-sheep-dark  { background: #3A3A38; color: #F6F4EF; }
-.tile-bell        { background: var(--bell); color: #ECE8DF; }
-.tile-wheat       { background: var(--wheat); color: var(--charcoal); }
+.sc-tile:hover {
+    transform: scale(1.08);
+}
 
-/* Simple glyphs (geometric shapes) */
-.glyph { display: block; width: 60%; height: 60%; border-radius: 6px; }
-.glyph.circle { border-radius: 50%; background: currentColor; }
-.glyph.square { background: currentColor; }
-.glyph.ring { border: 3px solid currentColor; border-radius: 50%; background: transparent; }
-.glyph.bar { width: 70%; height: 20%; background: currentColor; border-radius: 4px; }
+.sc-tile:focus {
+    outline: 2px solid var(--charcoal);
+    outline-offset: -2px;
+}
+
+.sc-tile.selected {
+    outline: 3px solid var(--olive);
+    outline-offset: -1px;
+    transform: scale(0.96);
+    background: var(--light-bg);
+}
+
+.sc-tile.swap-preview {
+    transform: scale(1.05);
+    background: #DDD8CF;
+}
+
+.sc-tile.clearing {
+    animation: fadeOut 300ms ease-out forwards;
+}
+
+.sc-tile.falling {
+    animation: fall 300ms ease-in forwards;
+}
+
+/* Swap animation - tiles move toward each other */
+@keyframes swapLeft {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-1 * (var(--tile-base) + var(--tile-gap)))); }
+}
+
+@keyframes swapRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(var(--tile-base) + var(--tile-gap))); }
+}
+
+@keyframes swapUp {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-1 * (var(--tile-base) + var(--tile-gap)))); }
+}
+
+@keyframes swapDown {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(var(--tile-base) + var(--tile-gap))); }
+}
+
+/* Fade out animation for clearing tiles */
+@keyframes fadeOut {
+    0% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.7); }
+}
+
+/* Fall animation - tiles drop down from top */
+@keyframes fall {
+    0% { opacity: 0; transform: translateY(-80px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Tile Type Colors */
+.tile-sheep-cream {
+    background: var(--cream);
+}
+
+.tile-sheep-olive {
+    background: #9AA887;
+}
+
+.tile-sheep-rust {
+    background: #D67851;
+}
+
+.tile-sheep-sky {
+    background: #93C2E6;
+}
+
+.tile-sheep-dark {
+    background: #3A3A38;
+    color: #F6F4EF;
+}
+
+.tile-bell {
+    background: var(--bell);
+    color: #ECE8DF;
+}
+
+.tile-wheat {
+    background: var(--wheat);
+    color: var(--charcoal);
+}
 
 /* Instructions */
-.sc-instructions { text-align: center; color: var(--charcoal); font-size: .9rem; }
+.sc-instructions {
+    text-align: center;
+    color: var(--charcoal);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto;
+}
 
 /* Buttons */
-.btn { padding: .6rem .9rem; border-radius: 8px; border: 1px solid var(--charcoal); background: var(--charcoal); color: var(--cream); }
-.btn-secondary { background: var(--charcoal); border-color: var(--charcoal); }
-.btn-secondary:hover { background: var(--olive); border-color: var(--olive); }
-
-/* Larger screens */
-@media (min-width: 768px) {
-  :root { --tile-size: 54px; --tile-gap: 8px; }
+.button-secondary {
+    padding: 0.6rem 1.2rem;
 }
+
+/* Tablet breakpoint */
+@media (min-width: 768px) {
+    :root {
+        --tile-size: 54px;
+        --tile-gap: 8px;
+    }
+    
+    .sc-header {
+        margin: 2.5rem 0;
+    }
+}
+
+/* Desktop breakpoint */
 @media (min-width: 1024px) {
-  :root { --tile-size: 60px; --tile-gap: 10px; }
-  .sc-board-wrap { max-width: 560px; }
+    :root {
+        --tile-size: 60px;
+        --tile-gap: 10px;
+    }
+    
+    .sc-board-wrap .container {
+        max-width: 560px;
+    }
 }
