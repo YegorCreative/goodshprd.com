@@ -30,6 +30,7 @@
   const MATCH_MIN = 3;
   const MAX_CASCADE = 20;
   const ANIMATION_DURATION = 300;
+  const CLEAR_ANIMATION_MS = 300;
 
   // ============================================================================
   // STATE OBJECT — Single source of truth
@@ -38,10 +39,12 @@
   const state = {
     board: [],              // 1D array of { type: string, special: null | 'row' | 'col' }
     selectedIndex: null,    // null or index (0-63)
-    isBusy: false,         // block input during animations
+    isBusy: false,          // block input during animations
     score: 0,
-    cascadeCount: 0,
-    cascadeDepth: 0        // for scoring bonuses
+    cascadeDepth: 0,        // for scoring bonuses
+    lastSwap: null,         // {a:number, b:number} indices for destination priority
+    lastSwapTypes: null,    // {typeA:string, typeB:string}
+    specialCreatedThisMove: false
   };
 
   // ============================================================================
@@ -189,7 +192,8 @@
 
       el.dataset.index = index;
       el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', `${tile.type || 'empty'}, position ${index}`);
+      const {row, col} = indexToCoord(index);
+      el.setAttribute('aria-label', `${tile.type || 'empty'}, row ${row+1}, column ${col+1}`);
 
       // Content: emoji glyph
       el.innerHTML = glyphFor(tile.type, tile.special);
@@ -208,8 +212,10 @@
     if (!type) return '';
 
     // If it's a special, show special symbol
-    if (special === 'row') return '🔔'; // Bell = row clear
-    if (special === 'col') return '🌾'; // Wheat = column clear
+    if (special === 'row') return '🔔';
+    if (special === 'col') return '🌾';
+    if (special === 'blast') return '🏮';
+    if (special === 'color') return '🎺';
 
     // Otherwise, all sheep types show sheep emoji
     return '🐑';
@@ -233,7 +239,8 @@
     }
 
     el.innerHTML = glyphFor(tile.type, tile.special);
-    el.setAttribute('aria-label', `${tile.type || 'empty'}, position ${index}`);
+    const {row, col} = indexToCoord(index);
+    el.setAttribute('aria-label', `${tile.type || 'empty'}, row ${row+1}, column ${col+1}`);
   }
 
   // ============================================================================
@@ -288,7 +295,11 @@
     state.cascadeDepth = 0;
 
     // Perform the swap
+    const typeA = state.board[indexA].type;
+    const typeB = state.board[indexB].type;
     swapTiles(indexA, indexB);
+    state.lastSwap = {a:indexA, b:indexB};
+    state.lastSwapTypes = {typeA, typeB};
 
     // Animate swap visually
     const elA = tileElements[indexA];
@@ -320,17 +331,19 @@
       elA.style.animation = '';
       elB.style.animation = '';
 
-      const matches = findMatches();
-
-      if (matches.size === 0) {
+      const context = { swapA:indexA, swapB:indexB, swappedTypes:{...state.lastSwapTypes} };
+      const matchesInfo = findMatches();
+      if (matchesInfo.matchedIndices.size === 0) {
         // No match → revert swap
         revertSwap(indexA, indexB);
         clearSelection();
         state.isBusy = false;
       } else {
+        // Check for Golden Sheep combo (color + other special) on direct swap activation
+        const comboHandled = maybeHandleGoldenSheepCombo(indexA, indexB);
         // Match found → start cascade
         clearSelection();
-        resolveMatches();
+        resolveCascades(context, matchesInfo);
       }
     }, ANIMATION_DURATION);
   }
@@ -378,28 +391,14 @@
 
   function findMatches() {
     /**
-     * Find all tiles that are part of a match-3 or longer.
-     * Returns a Set of indices.
+     * Find matches (3+) horizontally/vertically.
+     * Returns rich info: { matchedIndices:Set<number>, matchGroups:Array<{indices:number[],orientation:'row'|'col',length:number,type:string}> }
      */
     const matched = new Set();
-
-    // Check for special tiles that should clear
-    for (let i = 0; i < state.board.length; i++) {
-      const tile = state.board[i];
-      if (tile.special === 'row') {
-        // Clear entire row
-        const { row } = indexToCoord(i);
-        for (let c = 0; c < BOARD_SIZE; c++) {
-          matched.add(coordToIndex(row, c));
-        }
-      } else if (tile.special === 'col') {
-        // Clear entire column
-        const { col } = indexToCoord(i);
-        for (let r = 0; r < BOARD_SIZE; r++) {
-          matched.add(coordToIndex(r, col));
-        }
-      }
-    }
+    const groups = [];
+    // Track per-tile participation in row/col groups to detect shapes (L/T)
+    const hGroups = [];
+    const vGroups = [];
 
     // Check horizontal matches
     for (let r = 0; r < BOARD_SIZE; r++) {
@@ -418,9 +417,15 @@
         }
 
         if (len >= MATCH_MIN) {
+          const indices = [];
           for (let i = 0; i < len; i++) {
-            matched.add(coordToIndex(r, c + i));
+            const idx = coordToIndex(r, c + i);
+            indices.push(idx);
+            matched.add(idx);
           }
+          const g = {indices, orientation:'row', length:len, type};
+          groups.push(g);
+          hGroups.push(g);
         }
 
         c += len || 1;
@@ -444,89 +449,116 @@
         }
 
         if (len >= MATCH_MIN) {
+          const indices = [];
           for (let i = 0; i < len; i++) {
-            matched.add(coordToIndex(r + i, c));
+            const idx = coordToIndex(r + i, c);
+            indices.push(idx);
+            matched.add(idx);
           }
+          const g = {indices, orientation:'col', length:len, type};
+          groups.push(g);
+          vGroups.push(g);
         }
 
         r += len || 1;
       }
     }
 
-    return matched;
+    // Detect shape (L/T) groups: overlapping row+col groups of the same type
+    const shapeGroups = [];
+    for (const hg of hGroups) {
+      for (const vg of vGroups) {
+        if (hg.type !== vg.type) continue;
+        const overlap = hg.indices.find(i => vg.indices.includes(i));
+        if (overlap !== undefined) {
+          const indices = Array.from(new Set([...hg.indices, ...vg.indices]));
+          const g = {indices, orientation:'shape', length:indices.length, type:hg.type};
+          shapeGroups.push(g);
+        }
+      }
+    }
+    for (const sg of shapeGroups) {
+      groups.push(sg);
+      sg.indices.forEach(i => matched.add(i));
+    }
+
+    return { matchedIndices: matched, matchGroups: groups };
   }
 
   // ============================================================================
-  // CASCADE LOOP
+  // CASCADE LOOP (ASYNC, DETERMINISTIC)
   // ============================================================================
 
-  function resolveMatches() {
-    /**
-     * Main cascade loop:
-     * 1. Find matches
-     * 2. Clear matches (trigger special tiles if applicable)
-     * 3. Apply gravity
-     * 4. Refill
-     * 5. Check for more matches → repeat until none
-     */
-    state.cascadeDepth++;
+  const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-    if (state.cascadeDepth > MAX_CASCADE) {
-      console.warn('Cascade depth exceeded, stopping.');
-      state.isBusy = false;
-      return;
-    }
+  async function resolveCascades(context, initialMatchInfo) {
+    state.isBusy = true;
+    state.cascadeDepth = 0;
+    state.specialCreatedThisMove = false;
 
-    const matches = findMatches();
+    while (true) {
+      const info = initialMatchInfo || findMatches();
+      initialMatchInfo = null;
 
-    if (matches.size === 0) {
-      // No more matches, done
-      state.cascadeDepth = 0;
-      state.isBusy = false;
-      return;
-    }
+      // Decide special creation once per player move, using anchor rules and priority
+      let anchor = null;
+      let createdSpecialIndex = null;
+      if (!state.specialCreatedThisMove && info.matchedIndices.size > 0) {
+        anchor = chooseAnchorForCreation(info, context.swapA, context.swapB);
+        createdSpecialIndex = maybeCreateSpecialAtAnchor(info, anchor);
+        if (createdSpecialIndex !== null) {
+          state.specialCreatedThisMove = true;
+        }
+      }
 
-    // Clear matched tiles
-    clearMatches(matches);
+      // Build clear set (exclude anchor if we created a special there)
+      const initialSet = new Set(info.matchedIndices);
+      if (createdSpecialIndex !== null) initialSet.delete(createdSpecialIndex);
 
-    // Schedule next cascade
-    setTimeout(() => {
-      applyGravity();
-      refillBoard();
-      renderBoard(); // Full re-render after gravity/refill
-      
-      // Recursively resolve more cascades
-      setTimeout(resolveMatches, 350);
-    }, 300);
-  }
+      // Expand with specials
+      const expanded = expandClearSetWithSpecials(initialSet, context);
+      if (expanded.clearSet.size === 0) break;
 
-  function clearMatches(matchSet) {
-    /**
-     * Remove matched tiles and apply scoring.
-     * Check if any swapped tile triggered a special, and create it.
-     */
-    let baseScore = matchSet.size * 10;
-    let specialBonus = 0;
-
-    matchSet.forEach((index) => {
-      const el = tileElements[index];
-      el.classList.add('clearing');
-    });
-
-    setTimeout(() => {
-      matchSet.forEach((index) => {
-        state.board[index].type = null;
-        state.board[index].special = null;
-        updateTileElement(index);
-      });
+      // Animate clear
+      await animateClear(expanded.clearSet);
 
       // Scoring
-      baseScore += specialBonus;
-      if (state.cascadeDepth > 1) {
-        baseScore += (state.cascadeDepth - 1) * 25; // Cascade bonus
-      }
-      addScore(baseScore);
-    }, 300);
+      let points = expanded.clearSet.size * 10;
+      points += expanded.specialTriggers * 50;
+      if (state.cascadeDepth >= 1) points += state.cascadeDepth * 25;
+      addScore(points);
+
+      // Remove tiles
+      expanded.clearSet.forEach(idx => {
+        state.board[idx].type = null;
+        state.board[idx].special = null;
+      });
+
+      // Gravity + refill
+      applyGravity();
+      refillBoard();
+      renderBoard();
+
+      state.cascadeDepth++;
+
+      // Next iteration
+      const next = findMatches();
+      if (next.matchedIndices.size === 0) break;
+      initialMatchInfo = next;
+    }
+
+    state.isBusy = false;
+    state.lastSwap = null;
+    state.lastSwapTypes = null;
+    state.specialCreatedThisMove = false;
+  }
+
+  async function animateClear(clearSet) {
+    clearSet.forEach((index) => {
+      const el = tileElements[index];
+      if (el) el.classList.add('clearing');
+    });
+    await sleep(CLEAR_ANIMATION_MS);
   }
 
   function applyGravity() {
@@ -579,6 +611,182 @@
   }
 
   // ============================================================================
+  // SPECIALS: CREATION & EXPANSION
+  // ============================================================================
+
+  function chooseAnchorForCreation(matchInfo, swapA, swapB) {
+    // Prefer swapB (destination) if part of any group; else swapA if part; else null
+    const inGroups = (idx) => matchInfo.matchGroups.some(g => g.indices.includes(idx));
+    if (inGroups(swapB)) return swapB;
+    if (inGroups(swapA)) return swapA;
+    return null;
+  }
+
+  function maybeCreateSpecialAtAnchor(matchInfo, anchorIndex) {
+    if (anchorIndex === null) return null;
+    const tile = state.board[anchorIndex];
+    if (!tile) return null;
+
+    // Determine highest-priority group involving the anchor
+    const groups = matchInfo.matchGroups.filter(g => g.indices.includes(anchorIndex));
+    if (groups.length === 0) return null;
+
+    // Priority: shape → 5-line → 4-row → 4-col
+    let chosen = null;
+    // shape
+    chosen = groups.find(g => g.orientation === 'shape');
+    if (!chosen) {
+      // 5-line
+      chosen = groups.find(g => g.length >= 5);
+    }
+    if (!chosen) {
+      // 4-row
+      chosen = groups.find(g => g.length === 4 && g.orientation === 'row');
+    }
+    if (!chosen) {
+      // 4-col
+      chosen = groups.find(g => g.length === 4 && g.orientation === 'col');
+    }
+    if (!chosen) return null;
+
+    // Create special and keep anchor tile type
+    if (chosen.orientation === 'shape') {
+      tile.special = 'blast';
+    } else if (chosen.length >= 5) {
+      tile.special = 'color';
+    } else if (chosen.length === 4 && chosen.orientation === 'row') {
+      tile.special = 'row';
+    } else if (chosen.length === 4 && chosen.orientation === 'col') {
+      tile.special = 'col';
+    }
+
+    return anchorIndex;
+  }
+
+  function expandClearSetWithSpecials(initialSet, swapContext) {
+    const clearSet = new Set(initialSet);
+    let specialTriggers = 0;
+
+    const queue = Array.from(clearSet);
+    const seen = new Set(queue);
+
+    const addIndex = (i) => {
+      if (!clearSet.has(i)) {
+        clearSet.add(i);
+        if (!seen.has(i)) { seen.add(i); queue.push(i); }
+      }
+    };
+
+    while (queue.length) {
+      const idx = queue.shift();
+      const t = state.board[idx];
+      if (!t) continue;
+
+      if (t.special === 'row') {
+        const {row} = indexToCoord(idx);
+        for (let c=0;c<BOARD_SIZE;c++) addIndex(coordToIndex(row,c));
+        specialTriggers++;
+      } else if (t.special === 'col') {
+        const {col} = indexToCoord(idx);
+        for (let r=0;r<BOARD_SIZE;r++) addIndex(coordToIndex(r,col));
+        specialTriggers++;
+      } else if (t.special === 'blast') {
+        const {row,col} = indexToCoord(idx);
+        for (let dr=-1; dr<=1; dr++) {
+          for (let dc=-1; dc<=1; dc++) {
+            const rr = row+dr, cc = col+dc;
+            if (isValidCoord(rr,cc)) addIndex(coordToIndex(rr,cc));
+          }
+        }
+        specialTriggers++;
+      } else if (t.special === 'color') {
+        // Determine target color type
+        let targetType = null;
+        if (swapContext && (swapContext.swapA === idx || swapContext.swapB === idx)) {
+          // Triggered by swap: use swapped-with tile's type
+          const otherIdx = (swapContext.swapA === idx) ? swapContext.swapB : swapContext.swapA;
+          targetType = state.board[otherIdx]?.type || swapContext.swappedTypes?.typeA || swapContext.swappedTypes?.typeB;
+        }
+        if (!targetType) {
+          // Triggered by being hit: use its own type if present, else pick a random base
+          targetType = t.type || choice(BASE_TYPES);
+        }
+
+        for (let i=0; i<state.board.length; i++) {
+          if (state.board[i].type === targetType) addIndex(i);
+        }
+        specialTriggers++;
+      }
+    }
+
+    return { clearSet, specialTriggers };
+  }
+
+  function maybeHandleGoldenSheepCombo(indexA, indexB) {
+    // If a color special is swapped with row/col/blast, convert all tiles of the other tile's type into that special, then trigger
+    const a = state.board[indexA];
+    const b = state.board[indexB];
+    const isColorA = a.special === 'color';
+    const isColorB = b.special === 'color';
+    const otherSpecialType = (s) => (s === 'row' || s === 'col' || s === 'blast');
+
+    if (isColorA && otherSpecialType(b.special)) {
+      const targetType = b.type;
+      if (!targetType) return false;
+      for (let i=0; i<state.board.length; i++) {
+        if (state.board[i].type === targetType) {
+          state.board[i].special = b.special;
+        }
+      }
+      // Trigger them all immediately by adding all targetType indices to clear set and expanding
+      const initial = new Set();
+      for (let i=0; i<state.board.length; i++) {
+        if (state.board[i].type === targetType) initial.add(i);
+      }
+      const expanded = expandClearSetWithSpecials(initial, {swapA:indexA, swapB:indexB, swappedTypes:state.lastSwapTypes});
+      // Animate and clear synchronously to reflect combo before normal cascade
+      // Note: scoring handled in cascade loop, so we just mark tiles here and let cascade handle removal
+      expanded.clearSet.forEach(idx => {
+        const el = tileElements[idx];
+        if (el) el.classList.add('clearing');
+      });
+      return true;
+    }
+
+    if (isColorB && otherSpecialType(a.special)) {
+      const targetType = a.type;
+      if (!targetType) return false;
+      for (let i=0; i<state.board.length; i++) {
+        if (state.board[i].type === targetType) {
+          state.board[i].special = a.special;
+        }
+      }
+      const initial = new Set();
+      for (let i=0; i<state.board.length; i++) {
+        if (state.board[i].type === targetType) initial.add(i);
+      }
+      const expanded = expandClearSetWithSpecials(initial, {swapA:indexA, swapB:indexB, swappedTypes:state.lastSwapTypes});
+      expanded.clearSet.forEach(idx => {
+        const el = tileElements[idx];
+        if (el) el.classList.add('clearing');
+      });
+      return true;
+    }
+
+    // Whistle + Whistle: clear entire board
+    if (isColorA && isColorB) {
+      for (let i=0; i<state.board.length; i++) {
+        // add all to clear; cascade will remove
+        const el = tileElements[i];
+        if (el) el.classList.add('clearing');
+      }
+      return true;
+    }
+
+    return false;
+  }
+
+  // ============================================================================
   // INITIALIZATION & RESET
   // ============================================================================
 
@@ -592,6 +800,9 @@
     state.score = 0;
     state.cascadeCount = 0;
     state.cascadeDepth = 0;
+    state.lastSwap = null;
+    state.lastSwapTypes = null;
+    state.specialCreatedThisMove = false;
 
     buildInitialBoard();
     renderBoard();
