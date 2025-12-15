@@ -10,6 +10,18 @@
  * 
  * The engine uses a 1D array for the board (8x8 = 64 tiles),
  * with helper functions to convert between 1D index and 2D (row, col).
+ * 
+ * Required minimal HTML additions for Chapter UI:
+ * <div class="sc-chapter">
+ *   <div id="scChapterName"></div>
+ *   <div id="scChapterSubtitle"></div>
+ * </div>
+ * Optional CSS additions:
+ * - .sc-chapter { transition: opacity 300ms, transform 300ms; }
+ * - .sc-chapter.revealed { opacity: 1; transform: translateY(0); }
+ * - .sc-chapter { opacity: 0.85; transform: translateY(4px); }
+ * - .sc-toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--sc-accent, #6b8e23); color: white; padding: 8px 12px; border-radius: 8px; opacity: 0; transition: opacity 250ms; }
+ * - .sc-toast.show { opacity: 1; }
  */
 
 (function() {
@@ -32,6 +44,15 @@
   const ANIMATION_DURATION = 300;
   const CLEAR_ANIMATION_MS = 300;
 
+  // Chapters — soft progression by score milestones
+  const CHAPTERS = [
+    { id: 0, name: 'The Pasture', minScore: 0, subtitle: 'Learning the ground.' },
+    { id: 1, name: 'The Hills', minScore: 1500, subtitle: 'Patterns emerge.' },
+    { id: 2, name: 'The Watchtower', minScore: 4000, subtitle: 'You see further now.' },
+    { id: 3, name: 'The Fold', minScore: 8000, subtitle: 'Order in the chaos.' },
+    { id: 4, name: 'The Shepherd’s Way', minScore: 15000, subtitle: 'Endless.' }
+  ];
+
   // ============================================================================
   // STATE OBJECT — Single source of truth
   // ============================================================================
@@ -44,7 +65,10 @@
     cascadeDepth: 0,        // for scoring bonuses
     lastSwap: null,         // {a:number, b:number} indices for destination priority
     lastSwapTypes: null,    // {typeA:string, typeB:string}
-    specialCreatedThisMove: false
+    specialCreatedThisMove: false,
+    // Chapters
+    currentChapterId: 0,
+    lastChapterId: 0
   };
 
   // ============================================================================
@@ -54,6 +78,16 @@
   const boardEl = document.getElementById('scBoard');
   const scoreEl = document.getElementById('scScore');
   const resetBtn = document.getElementById('scReset');
+  const chapterNameEl = document.getElementById('scChapterName');
+  const chapterSubtitleEl = document.getElementById('scChapterSubtitle');
+  // Toast container (optional)
+  let toastEl = document.getElementById('scToast');
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.id = 'scToast';
+    toastEl.className = 'sc-toast';
+    document.body.appendChild(toastEl);
+  }
   
   let tileElements = []; // cached tile DOM elements
 
@@ -82,6 +116,21 @@
 
   function isValidCoord(row, col) {
     return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+  }
+
+  function mostCommonTypeOnBoard() {
+    const counts = Object.create(null);
+    for (let i=0; i<state.board.length; i++) {
+      const t = state.board[i].type;
+      if (!t) continue;
+      counts[t] = (counts[t] || 0) + 1;
+    }
+    let best = null, bestCount = -1;
+    for (const type of BASE_TYPES) {
+      const c = counts[type] || 0;
+      if (c > bestCount) { best = type; bestCount = c; }
+    }
+    return best || choice(BASE_TYPES);
   }
 
   function areAdjacent(indexA, indexB) {
@@ -257,14 +306,14 @@
      */
     if (state.isBusy) return;
 
-    // No selection yet
+    // No selection yet → select the tile (specials activate only via swap)
     if (state.selectedIndex === null) {
       state.selectedIndex = index;
       tileElements[index].classList.add('selected');
       return;
     }
 
-    // Tapping the same tile → deselect
+    // Tapping the same tile → deselect (since specials activate on first tap)
     if (state.selectedIndex === index) {
       tileElements[index].classList.remove('selected');
       state.selectedIndex = null;
@@ -501,11 +550,11 @@
     let loops = 0;
     while (true) {
       if (loops++ > MAX_CASCADE) break;
+      const useInitial = initialClearSet && !firstPassUsedInitialSet;
       let info;
-      if (initialClearSet && !firstPassUsedInitialSet) {
+      if (useInitial) {
         // Skip match finding on first iteration, use provided clear set
         info = { matchedIndices: new Set(), matchGroups: [] };
-        firstPassUsedInitialSet = true;
       } else {
         info = initialMatchInfo || findMatches();
         initialMatchInfo = null;
@@ -523,7 +572,8 @@
       }
 
       // Build clear set (exclude anchor if we created a special there)
-      let clearSet = initialClearSet && !firstPassUsedInitialSet ? new Set(initialClearSet) : new Set(info.matchedIndices);
+      let clearSet = useInitial ? new Set(initialClearSet) : new Set(info.matchedIndices);
+      if (useInitial) firstPassUsedInitialSet = true;
       if (createdSpecialIndex !== null) clearSet.delete(createdSpecialIndex);
 
       // Expand with specials
@@ -624,6 +674,52 @@
   function addScore(points) {
     state.score += points;
     scoreEl.textContent = state.score;
+    checkForChapterChange();
+  }
+
+  // ==========================================================================
+  // CHAPTERS — Soft progression
+  // ==========================================================================
+
+  function getChapterForScore(score) {
+    // Return highest chapter whose minScore <= score
+    let current = CHAPTERS[0];
+    for (const ch of CHAPTERS) {
+      if (score >= ch.minScore) current = ch;
+    }
+    return current;
+  }
+
+  function updateChapterUI(chapter) {
+    if (chapterNameEl) chapterNameEl.textContent = chapter.name;
+    if (chapterSubtitleEl) chapterSubtitleEl.textContent = chapter.subtitle;
+    // Subtle reveal animation
+    const container = chapterNameEl?.parentElement?.classList ? chapterNameEl.parentElement : null;
+    if (container && container.classList) {
+      container.classList.add('revealed');
+      setTimeout(() => container.classList.remove('revealed'), 600);
+    }
+    // Optional: change accent color variable per chapter
+    const accents = ['#6b8e23', '#4c7a9f', '#8a5a44', '#2f4858', '#7a6a4f'];
+    const accent = accents[chapter.id % accents.length];
+    document.documentElement.style.setProperty('--sc-accent', accent);
+  }
+
+  function showChapterToast(chapter) {
+    if (!toastEl) return;
+    toastEl.textContent = `Chapter Unlocked: ${chapter.name}`;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 2000);
+  }
+
+  function checkForChapterChange() {
+    const chapter = getChapterForScore(state.score);
+    if (chapter.id > state.currentChapterId) {
+      state.lastChapterId = state.currentChapterId;
+      state.currentChapterId = chapter.id;
+      updateChapterUI(chapter);
+      showChapterToast(chapter);
+    }
   }
 
   // ============================================================================
@@ -681,7 +777,7 @@
 
   function expandClearSetWithSpecials(initialSet, swapContext) {
     const clearSet = new Set(initialSet);
-    let specialTriggers = 0;
+    const triggered = new Set();
 
     const queue = Array.from(clearSet);
     const seen = new Set(queue);
@@ -701,11 +797,11 @@
       if (t.special === 'row') {
         const {row} = indexToCoord(idx);
         for (let c=0;c<BOARD_SIZE;c++) addIndex(coordToIndex(row,c));
-        specialTriggers++;
+        triggered.add(idx);
       } else if (t.special === 'col') {
         const {col} = indexToCoord(idx);
         for (let r=0;r<BOARD_SIZE;r++) addIndex(coordToIndex(r,col));
-        specialTriggers++;
+        triggered.add(idx);
       } else if (t.special === 'blast') {
         const {row,col} = indexToCoord(idx);
         for (let dr=-1; dr<=1; dr++) {
@@ -714,7 +810,7 @@
             if (isValidCoord(rr,cc)) addIndex(coordToIndex(rr,cc));
           }
         }
-        specialTriggers++;
+        triggered.add(idx);
       } else if (t.special === 'color') {
         // Determine target color type
         let targetType = null;
@@ -731,11 +827,11 @@
         for (let i=0; i<state.board.length; i++) {
           if (state.board[i].type === targetType) addIndex(i);
         }
-        specialTriggers++;
+        triggered.add(idx);
       }
     }
 
-    return { clearSet, specialTriggers };
+    return { clearSet, specialTriggers: triggered.size };
   }
 
   function getSwapActivationClearSet(indexA, indexB, context) {
@@ -836,6 +932,11 @@
     buildInitialBoard();
     renderBoard();
     scoreEl.textContent = '0';
+    // Initialize chapter based on starting score
+    const ch = getChapterForScore(state.score);
+    state.currentChapterId = ch.id;
+    state.lastChapterId = ch.id;
+    updateChapterUI(ch);
   }
 
   // ============================================================================
