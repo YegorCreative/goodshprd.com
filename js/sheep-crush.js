@@ -393,6 +393,10 @@
         clearSelection();
         const initialSet = activation ? activation.clearSet : null;
         const initialTriggers = activation ? activation.specialTriggers : 0;
+        // If activation modified specials/types, ensure DOM reflects current board before clearing
+        if (activation) {
+          renderBoard();
+        }
         resolveCascades(context, matchesInfo, initialSet, initialTriggers);
       }
     }, ANIMATION_DURATION);
