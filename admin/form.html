@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Good Shepherd - Product Admin Form</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .section {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 28px;
+      grid-column: 1 / -1;
+    }
+
+    h2 {
+      color: #6b8e23;
+      margin-bottom: 20px;
+      font-size: 18px;
+      border-bottom: 2px solid #6b8e23;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      color: #333;
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #6b8e23;
+      box-shadow: 0 0 0 3px rgba(107, 142, 35, 0.1);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+    }
+
+    .image-upload {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .image-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .image-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+
+    .image-item input {
+      flex: 1;
+    }
+
+    .remove-btn {
+      padding: 6px 12px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .remove-btn:hover {
+      background: #c82333;
+    }
+
+    .add-image-btn {
+      padding: 10px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .add-image-btn:hover {
+      background: #218838;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+      grid-column: 1 / -1;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .generate-btn {
+      background: #6b8e23;
+      color: white;
+      flex: 1;
+    }
+
+    .generate-btn:hover {
+      background: #556b1f;
+    }
+
+    .reset-btn {
+      background: #6c757d;
+      color: white;
+      flex: 1;
+    }
+
+    .reset-btn:hover {
+      background: #5a6268;
+    }
+
+    .output-section {
+      position: relative;
+    }
+
+    .json-output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+      min-height: 400px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 8px 16px;
+      background: #6b8e23;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .copy-btn:hover {
+      background: #556b1f;
+    }
+
+    .copy-btn.copied {
+      background: #28a745;
+    }
+
+    .instructions {
+      background: #e7f3ff;
+      padding: 15px;
+      border-left: 4px solid #2196F3;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .instructions h3 {
+      color: #2196F3;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .instructions ol {
+      margin-left: 20px;
+    }
+
+    .instructions li {
+      margin-bottom: 8px;
+    }
+
+    .success-message {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>📦 Good Shepherd Product Admin</h1>
+
+  <div class="container">
+    <!-- Form Section -->
+    <form id="productForm" class="section">
+      <h2>Add New Product</h2>
+
+      <div class="form-group">
+        <label for="title">Product Title *</label>
+        <input type="text" id="title" name="title" placeholder="e.g., Vintage Wool Jacket" required>
+      </div>
+
+      <div class="form-group">
+        <label for="price">Price *</label>
+        <input type="number" id="price" name="price" placeholder="125.00" step="0.01" min="0" required>
+      </div>
+
+      <div class="form-group">
+        <label for="size">Size *</label>
+        <input type="text" id="size" name="size" placeholder="e.g., Large, M/L, One Size" required>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category *</label>
+        <select id="category" name="category" required>
+          <option value="">Select a category</option>
+          <option value="Tops">Tops</option>
+          <option value="Bottoms">Bottoms</option>
+          <option value="Outerwear">Outerwear</option>
+          <option value="Accessories">Accessories</option>
+          <option value="Unisex">Unisex</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="condition">Condition Notes *</label>
+        <input type="text" id="condition" name="condition" placeholder="e.g., Gently used, excellent condition" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description *</label>
+        <textarea id="description" name="description" placeholder="Detailed product description..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Product Images</label>
+        <div class="image-upload">
+          <div class="image-list" id="imageList"></div>
+          <button type="button" class="add-image-btn" onclick="addImageField()">+ Add Image URL</button>
+        </div>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="featured" name="featured">
+        <label for="featured">Featured Product (show on homepage)</label>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="soldOut" name="soldOut">
+        <label for="soldOut">Sold Out</label>
+      </div>
+
+      <div class="button-group">
+        <button type="button" class="generate-btn" onclick="generateJSON()">Generate JSON</button>
+        <button type="reset" class="reset-btn">Clear Form</button>
+      </div>
+    </form>
+
+    <!-- Output Section -->
+    <div class="section output-section">
+      <h2>Generated JSON</h2>
+      <div class="success-message" id="successMessage">✓ Copied to clipboard!</div>
+      <button class="copy-btn" onclick="copyToClipboard()">Copy JSON</button>
+      <pre class="json-output" id="jsonOutput">Fill out the form and click "Generate JSON"</pre>
+
+      <div class="instructions">
+        <h3>How to save this product:</h3>
+        <ol>
+          <li>Fill out the form on the left</li>
+          <li>Click "Generate JSON"</li>
+          <li>Click "Copy JSON" (copies to clipboard)</li>
+          <li>Go to GitHub → content/products/</li>
+          <li>Create new file: name it like "product-name.json"</li>
+          <li>Paste the JSON and commit</li>
+          <li>Product appears on shop in ~1 minute</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize with one empty image field
+    function initImageFields() {
+      const list = document.getElementById('imageList');
+      if (list.children.length === 0) {
+        addImageField();
+      }
+    }
+
+    function addImageField() {
+      const list = document.getElementById('imageList');
+      const div = document.createElement('div');
+      div.className = 'image-item';
+      div.innerHTML = `
+        <input type="text" placeholder="Image URL (e.g., /images/products/photo.jpg)" class="image-url">
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+      `;
+      list.appendChild(div);
+    }
+
+    function generateJSON() {
+      const title = document.getElementById('title').value.trim();
+      const price = parseFloat(document.getElementById('price').value);
+      const size = document.getElementById('size').value.trim();
+      const category = document.getElementById('category').value;
+      const condition = document.getElementById('condition').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const featured = document.getElementById('featured').checked;
+      const soldOut = document.getElementById('soldOut').checked;
+
+      // Validate required fields
+      if (!title || !price || !size || !category || !condition || !description) {
+        alert('Please fill in all required fields (marked with *)');
+        return;
+      }
+
+      // Get image URLs
+      const images = Array.from(document.querySelectorAll('.image-url'))
+        .map(input => input.value.trim())
+        .filter(url => url.length > 0);
+
+      // Generate slug from title
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      // Create product object
+      const product = {
+        title,
+        slug,
+        price,
+        size,
+        category,
+        conditionNotes: condition,
+        description,
+        photos: images,
+        featured,
+        soldOut,
+        createdAt: new Date().toISOString()
+      };
+
+      // Display JSON
+      const jsonOutput = document.getElementById('jsonOutput');
+      jsonOutput.textContent = JSON.stringify(product, null, 2);
+    }
+
+    function copyToClipboard() {
+      const jsonOutput = document.getElementById('jsonOutput');
+      const text = jsonOutput.textContent;
+
+      if (text === 'Fill out the form and click "Generate JSON"') {
+        alert('Please generate JSON first');
+        return;
+      }
+
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        const message = document.getElementById('successMessage');
+        btn.classList.add('copied');
+        btn.textContent = '✓ Copied!';
+        message.classList.add('show');
+
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = 'Copy JSON';
+          message.classList.remove('show');
+        }, 2000);
+      });
+    }
+
+    // Generate JSON on form submission (Enter key)
+    document.getElementById('productForm').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        generateJSON();
+      }
+    });
+
+    // Initialize
+    initImageFields();
+  </script>
+</body>
+</html>
