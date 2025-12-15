@@ -18,6 +18,7 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="css/shop.css">
 </head>
 <body>
     
@@ -103,99 +104,12 @@
         <!-- Shop Products Grid -->
         <section class="shop-section">
             <div class="container">
-                <div class="products-grid">
-                    
-                    <!-- Product 1 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                            <span class="product-badge">New Arrival</span>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Vintage Wool Overcoat</h3>
-                            <p class="product-description">1960s | Heavy wool | Restored & cleaned</p>
-                            <p class="product-price">$185</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 2 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Waxed Canvas Jacket</h3>
-                            <p class="product-description">1970s | Re-waxed & restored</p>
-                            <p class="product-price">$220</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 3 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Leather Work Boots</h3>
-                            <p class="product-description">1980s | Resoled & conditioned</p>
-                            <p class="product-price">$165</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 4 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Denim Trucker Jacket</h3>
-                            <p class="product-description">1970s | Original hardware</p>
-                            <p class="product-price">$145</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 5 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Flannel Work Shirt</h3>
-                            <p class="product-description">1980s | Heavy weight</p>
-                            <p class="product-price">$85</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 6 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Canvas Field Pants</h3>
-                            <p class="product-description">1960s | Reinforced repairs</p>
-                            <p class="product-price">$95</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 7 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Corduroy Sport Coat</h3>
-                            <p class="product-description">1970s | Patch pockets</p>
-                            <p class="product-price">$125</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
+                <!-- Error message displayed if products fail to load -->
+                <div id="products-error" class="products-error" style="display: none;"></div>
+                
+                <!-- Products grid is populated by js/shop.js -->
+                <div id="products-grid" class="products-grid">
+                    <!-- Products loaded dynamically by js/shop.js -->
 
                     <!-- Product 8 -->
                     <article class="product-card">
@@ -288,6 +202,13 @@
     </footer>
 
     <!-- JavaScript -->
+    <!-- Stripe Checkout (for payment integration) -->
+    <script src="/js/stripe-checkout.js"></script>
+    
+    <!-- Shop Product Manager (loads products from JSON files) -->
+    <script src="/js/shop.js"></script>
+    
+    <!-- Other scripts -->
     <script src="js/script.js"></script>
 
     <!-- Back To Top Button -->

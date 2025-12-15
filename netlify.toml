@@ -1,0 +1,47 @@
+[build]
+command = "npm run build"
+functions = "netlify/functions"
+publish = "."
+
+[functions]
+node_bundler = "esbuild"
+
+[[env.production]]
+context = "production"
+
+  [env.production.environment]
+  STRIPE_SECRET_KEY = ""
+  STRIPE_WEBHOOK_SECRET = ""
+
+[[env.deploy-preview]]
+context = "deploy-preview"
+
+  [env.deploy-preview.environment]
+  STRIPE_SECRET_KEY = ""
+  STRIPE_WEBHOOK_SECRET = ""
+
+# Redirect API requests
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/:splat"
+status = 200
+
+# CORS headers for API requests (if needed)
+[[headers]]
+for = "/api/*"
+[headers.values]
+  Content-Type = "application/json"
+
+# Cache control for static assets
+[[headers]]
+for = "/images/*"
+[headers.values]
+  Cache-Control = "public, max-age=31536000"
+
+# Admin interface headers
+[[headers]]
+for = "/admin/*"
+[headers.values]
+  X-Frame-Options = "SAMEORIGIN"
+  Cache-Control = "no-cache, no-store, must-revalidate"
+  Content-Type = "text/html"

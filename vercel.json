@@ -1,0 +1,24 @@
+{
+  "functions": {
+    "api/create-checkout-session": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/webhook": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": ".",
+  "env": {
+    "production": {
+      "STRIPE_SECRET_KEY": "@stripe-secret-key",
+      "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
+    },
+    "preview": {
+      "STRIPE_SECRET_KEY": "@stripe-secret-key",
+      "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
+    }
+  }
+}

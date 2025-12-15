@@ -1,0 +1,135 @@
+# Decap CMS Configuration for Good Shepherd Shop
+# 
+# This file configures the admin interface for managing shop products.
+# Products are stored as JSON files in /content/products/
+# Authentication uses Netlify Identity + Git Gateway
+
+backend:
+  # GitHub backend with Netlify Git Gateway
+  name: git-gateway
+  branch: main
+  repo: yegorhambaryan/goodshprd.com
+  base_path: /admin
+  auth_endpoint: /api/auth
+  squash_merges: true
+  commit_messages:
+    create: 'Add product: {{slug}}'
+    update: 'Update product: {{slug}}'
+    delete: 'Delete product: {{slug}}'
+    uploadMedia: 'Add image: {{path}}'
+    deleteMedia: 'Remove image: {{path}}'
+
+media_folder: "public/images/products"
+public_folder: "/images/products"
+
+# Collection for shop products
+collections:
+  - name: "products"
+    label: "Products"
+    folder: "content/products"
+    create: true
+    slug: "{{slug}}"
+    format: "json"
+    identifier_field: "slug"
+    sortable_fields: ["createdAt", "title", "featured", "soldOut"]
+    view_filters:
+      - label: Featured
+        field: featured
+        pattern: true
+      - label: Sold Out
+        field: soldOut
+        pattern: true
+      - label: In Stock
+        field: soldOut
+        pattern: false
+    fields:
+      # Title - auto-generates slug
+      - name: "title"
+        label: "Product Title"
+        widget: "string"
+        required: true
+        hint: "e.g., 'Vintage Wool Sweater' or 'Canvas Tote Bag'"
+
+      # Slug - auto-generated but can be edited
+      - name: "slug"
+        label: "Product Slug (URL-friendly)"
+        widget: "string"
+        hint: "Auto-generated from title. Used in URLs (lowercase, hyphens)"
+
+      # Price in cents (to avoid floating point issues)
+      - name: "price"
+        label: "Price (in dollars)"
+        widget: "number"
+        value_type: "float"
+        step: 0.01
+        min: 0
+        required: true
+        hint: "e.g., 19.99"
+
+      # Size - free text, could be S/M/L or specific dimensions
+      - name: "size"
+        label: "Size"
+        widget: "string"
+        required: true
+        hint: "e.g., 'Medium', 'One Size Fits All', '10x12 inches'"
+
+      # Category dropdown
+      - name: "category"
+        label: "Category"
+        widget: "select"
+        options:
+          - "Tops"
+          - "Bottoms"
+          - "Outerwear"
+          - "Accessories"
+          - "Unisex"
+        required: true
+
+      # Condition notes - short description of item condition
+      - name: "conditionNotes"
+        label: "Condition Notes"
+        widget: "text"
+        required: true
+        hint: "Describe condition: 'Gently used', 'Brand new with tags', 'Minor wear', etc."
+
+      # Full product description
+      - name: "description"
+        label: "Full Description"
+        widget: "markdown"
+        required: true
+        hint: "Detailed description. Can include sizing info, care instructions, etc."
+
+      # Product photos
+      - name: "photos"
+        label: "Product Photos"
+        widget: "list"
+        field:
+          name: image
+          label: Image
+          widget: image
+        min: 1
+        max: 6
+        hint: "Add 1-6 product images. First image is the thumbnail."
+
+      # Featured on homepage
+      - name: "featured"
+        label: "Featured on Homepage"
+        widget: "boolean"
+        default: false
+        hint: "Show this product in the homepage featured section (max 6 featured items)"
+
+      # Sold out status
+      - name: "soldOut"
+        label: "Sold Out"
+        widget: "boolean"
+        default: false
+        hint: "Check if this item has been sold. It won't be purchasable."
+
+      # Created date - auto-set on creation
+      - name: "createdAt"
+        label: "Created Date"
+        widget: "datetime"
+        format: "YYYY-MM-DDTHH:mm:ssZ"
+        default: "{{now}}"
+        date_format: "YYYY-MM-DD"
+        time_format: "HH:mm"

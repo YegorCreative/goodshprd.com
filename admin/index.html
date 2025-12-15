@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Good Shepherd Admin</title>
+
+  <!-- Decap CMS (Netlify CMS) -->
+  <link rel="stylesheet" href="https://unpkg.com/decap-cms@3.1.2/dist/decap-cms.css" />
+  <script src="https://unpkg.com/decap-cms@3.1.2/dist/decap-cms.js"></script>
+
+  <!-- Netlify Identity Widget for Authentication -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+      background: #f5f5f5;
+    }
+
+    .nc-root {
+      background: #fff;
+    }
+
+    .nc-logo {
+      color: #6b8e23;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- Decap CMS will render here -->
+
+  <script>
+    // Initialize Netlify Identity when widget loads
+    if (window.netlifyIdentity) {
+      window.netlifyIdentity.on("init", (user) => {
+        if (!user) {
+          window.netlifyIdentity.open();
+        }
+      });
+    }
+  </script>
+</body>
+</html>

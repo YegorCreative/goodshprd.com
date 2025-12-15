@@ -1,0 +1,17 @@
+{
+  "title": "Vintage Wool Overcoat",
+  "slug": "vintage-wool-overcoat",
+  "price": 185.00,
+  "size": "Large",
+  "category": "Outerwear",
+  "conditionNotes": "Gently used, professionally cleaned and restored",
+  "description": "A beautiful 1960s wool overcoat in charcoal gray. Heavy wool construction with original mother-of-pearl buttons. One small repair near the left pocket (professionally done). This coat is perfect for cold Minnesota winters and has plenty of life left in it.",
+  "photos": [
+    "/images/products/vintage-wool-overcoat-front.jpg",
+    "/images/products/vintage-wool-overcoat-back.jpg",
+    "/images/products/vintage-wool-overcoat-detail.jpg"
+  ],
+  "featured": true,
+  "soldOut": false,
+  "createdAt": "2025-12-15T10:00:00Z"
+}
