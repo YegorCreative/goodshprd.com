@@ -332,18 +332,19 @@
       elB.style.animation = '';
 
       const context = { swapA:indexA, swapB:indexB, swappedTypes:{...state.lastSwapTypes} };
+      const activation = getSwapActivationClearSet(indexA, indexB, context);
       const matchesInfo = findMatches();
-      if (matchesInfo.matchedIndices.size === 0) {
-        // No match → revert swap
+      if (matchesInfo.matchedIndices.size === 0 && !activation) {
+        // No match and no special activation → revert swap
         revertSwap(indexA, indexB);
         clearSelection();
         state.isBusy = false;
       } else {
-        // Check for Golden Sheep combo (color + other special) on direct swap activation
-        const comboHandled = maybeHandleGoldenSheepCombo(indexA, indexB);
-        // Match found → start cascade
+        // Proceed to cascades
         clearSelection();
-        resolveCascades(context, matchesInfo);
+        const initialSet = activation ? activation.clearSet : null;
+        const initialTriggers = activation ? activation.specialTriggers : 0;
+        resolveCascades(context, matchesInfo, initialSet, initialTriggers);
       }
     }, ANIMATION_DURATION);
   }
@@ -491,14 +492,24 @@
 
   const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-  async function resolveCascades(context, initialMatchInfo) {
+  async function resolveCascades(context, initialMatchInfo, initialClearSet = null, initialSpecialTriggers = 0) {
     state.isBusy = true;
     state.cascadeDepth = 0;
     state.specialCreatedThisMove = false;
 
+    let firstPassUsedInitialSet = false;
+    let loops = 0;
     while (true) {
-      const info = initialMatchInfo || findMatches();
-      initialMatchInfo = null;
+      if (loops++ > MAX_CASCADE) break;
+      let info;
+      if (initialClearSet && !firstPassUsedInitialSet) {
+        // Skip match finding on first iteration, use provided clear set
+        info = { matchedIndices: new Set(), matchGroups: [] };
+        firstPassUsedInitialSet = true;
+      } else {
+        info = initialMatchInfo || findMatches();
+        initialMatchInfo = null;
+      }
 
       // Decide special creation once per player move, using anchor rules and priority
       let anchor = null;
@@ -512,11 +523,13 @@
       }
 
       // Build clear set (exclude anchor if we created a special there)
-      const initialSet = new Set(info.matchedIndices);
-      if (createdSpecialIndex !== null) initialSet.delete(createdSpecialIndex);
+      let clearSet = initialClearSet && !firstPassUsedInitialSet ? new Set(initialClearSet) : new Set(info.matchedIndices);
+      if (createdSpecialIndex !== null) clearSet.delete(createdSpecialIndex);
 
       // Expand with specials
-      const expanded = expandClearSetWithSpecials(initialSet, context);
+      const expanded = expandClearSetWithSpecials(clearSet, context);
+      // Add any pre-counted triggers for initial activation if provided
+      expanded.specialTriggers += (initialSpecialTriggers || 0);
       if (expanded.clearSet.size === 0) break;
 
       // Animate clear
@@ -545,6 +558,9 @@
       const next = findMatches();
       if (next.matchedIndices.size === 0) break;
       initialMatchInfo = next;
+      // Reset initial set/triggers after first use
+      initialClearSet = null;
+      initialSpecialTriggers = 0;
     }
 
     state.isBusy = false;
@@ -722,68 +738,81 @@
     return { clearSet, specialTriggers };
   }
 
-  function maybeHandleGoldenSheepCombo(indexA, indexB) {
-    // If a color special is swapped with row/col/blast, convert all tiles of the other tile's type into that special, then trigger
+  function getSwapActivationClearSet(indexA, indexB, context) {
     const a = state.board[indexA];
     const b = state.board[indexB];
+    if (!a || !b) return null;
+
     const isColorA = a.special === 'color';
     const isColorB = b.special === 'color';
-    const otherSpecialType = (s) => (s === 'row' || s === 'col' || s === 'blast');
+    const isRowColBlast = (s) => (s === 'row' || s === 'col' || s === 'blast');
 
-    if (isColorA && otherSpecialType(b.special)) {
+    // Color + Color → clear entire board
+    if (isColorA && isColorB) {
+      const set = new Set();
+      for (let i=0; i<state.board.length; i++) set.add(i);
+      return { clearSet: set, specialTriggers: 0 };
+    }
+
+    // Color + Special → Golden Sheep conversion then trigger
+    if (isColorA && isRowColBlast(b.special)) {
       const targetType = b.type;
-      if (!targetType) return false;
+      if (!targetType) return null;
       for (let i=0; i<state.board.length; i++) {
         if (state.board[i].type === targetType) {
           state.board[i].special = b.special;
         }
       }
-      // Trigger them all immediately by adding all targetType indices to clear set and expanding
-      const initial = new Set();
+      const set = new Set();
       for (let i=0; i<state.board.length; i++) {
-        if (state.board[i].type === targetType) initial.add(i);
+        if (state.board[i].type === targetType) set.add(i);
       }
-      const expanded = expandClearSetWithSpecials(initial, {swapA:indexA, swapB:indexB, swappedTypes:state.lastSwapTypes});
-      // Animate and clear synchronously to reflect combo before normal cascade
-      // Note: scoring handled in cascade loop, so we just mark tiles here and let cascade handle removal
-      expanded.clearSet.forEach(idx => {
-        const el = tileElements[idx];
-        if (el) el.classList.add('clearing');
-      });
-      return true;
+      return { clearSet: set, specialTriggers: 0 };
     }
-
-    if (isColorB && otherSpecialType(a.special)) {
+    if (isColorB && isRowColBlast(a.special)) {
       const targetType = a.type;
-      if (!targetType) return false;
+      if (!targetType) return null;
       for (let i=0; i<state.board.length; i++) {
         if (state.board[i].type === targetType) {
           state.board[i].special = a.special;
         }
       }
-      const initial = new Set();
+      const set = new Set();
       for (let i=0; i<state.board.length; i++) {
-        if (state.board[i].type === targetType) initial.add(i);
+        if (state.board[i].type === targetType) set.add(i);
       }
-      const expanded = expandClearSetWithSpecials(initial, {swapA:indexA, swapB:indexB, swappedTypes:state.lastSwapTypes});
-      expanded.clearSet.forEach(idx => {
-        const el = tileElements[idx];
-        if (el) el.classList.add('clearing');
-      });
-      return true;
+      return { clearSet: set, specialTriggers: 0 };
     }
 
-    // Whistle + Whistle: clear entire board
-    if (isColorA && isColorB) {
+    // Color + any normal → clear all of the other tile's color
+    if (isColorA && !b.special) {
+      const targetType = b.type;
+      if (!targetType) return null;
+      const set = new Set();
       for (let i=0; i<state.board.length; i++) {
-        // add all to clear; cascade will remove
-        const el = tileElements[i];
-        if (el) el.classList.add('clearing');
+        if (state.board[i].type === targetType) set.add(i);
       }
-      return true;
+      return { clearSet: set, specialTriggers: 0 };
+    }
+    if (isColorB && !a.special) {
+      const targetType = a.type;
+      if (!targetType) return null;
+      const set = new Set();
+      for (let i=0; i<state.board.length; i++) {
+        if (state.board[i].type === targetType) set.add(i);
+      }
+      return { clearSet: set, specialTriggers: 0 };
     }
 
-    return false;
+    // Special + Special (row/col/blast) → trigger both effects by expanding from both indices
+    if (isRowColBlast(a.special) && isRowColBlast(b.special)) {
+      const base = new Set([indexA, indexB]);
+      const expanded = expandClearSetWithSpecials(base, context);
+      return { clearSet: expanded.clearSet, specialTriggers: expanded.specialTriggers };
+    }
+
+    // No activation swap applicable
+    return null;
   }
 
   // ============================================================================
