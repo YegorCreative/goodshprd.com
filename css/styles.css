@@ -20,7 +20,8 @@
 }
 
 html {
-    font-size: 100%; /* 16px base, allows user preference */
+    font-size: 100%;
+    /* 16px base, allows user preference */
     scroll-behavior: smooth;
 }
 
@@ -44,7 +45,12 @@ img {
    Typography (Mobile-First)
    ======================================== */
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Libre Baskerville', Georgia, serif;
     font-weight: 400;
     line-height: 1.3;
@@ -93,7 +99,8 @@ a:focus {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 1rem; /* Mobile: 16px sides */
+    padding: 0 1rem;
+    /* Mobile: 16px sides */
 }
 
 /* ========================================
@@ -154,7 +161,8 @@ a:focus {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 44px; /* Minimum tap target */
+    width: 44px;
+    /* Minimum tap target */
     height: 44px;
     background: transparent;
     border: none;
@@ -247,7 +255,13 @@ a:focus {
     font-weight: 400;
     letter-spacing: 0.02em;
     text-align: center;
-    min-height: 44px; /* Tap target */
+    min-height: 44px;
+    /* Tap target */
+}
+
+.main-nav a.is-active {
+    font-weight: 500;
+    border-bottom: 1px solid currentColor;
 }
 
 /* ========================================
@@ -316,9 +330,11 @@ a:focus {
 
 .button {
     display: inline-block;
-    width: 100%; /* Full width on mobile */
+    width: 100%;
+    /* Full width on mobile */
     max-width: 320px;
-    min-height: 44px; /* Tap target */
+    min-height: 44px;
+    /* Tap target */
     padding: 0.875rem 1.5rem;
     font-size: 0.95rem;
     font-weight: 400;
@@ -434,7 +450,8 @@ a:focus {
 
 .products-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Single column on mobile */
+    grid-template-columns: 1fr;
+    /* Single column on mobile */
     gap: 2.5rem;
 }
 
@@ -529,7 +546,8 @@ a:focus {
     margin-top: 1rem;
     font-weight: 500;
     color: #6B5E4A;
-    min-height: 44px; /* Tap target */
+    min-height: 44px;
+    /* Tap target */
     line-height: 44px;
 }
 
@@ -734,7 +752,8 @@ a:focus {
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: 1fr; /* Single column on mobile */
+    grid-template-columns: 1fr;
+    /* Single column on mobile */
     gap: 1rem;
 }
 
@@ -1034,7 +1053,8 @@ a:focus {
 
 .footer-content {
     display: grid;
-    grid-template-columns: 1fr; /* Single column on mobile */
+    grid-template-columns: 1fr;
+    /* Single column on mobile */
     gap: 2rem;
     margin-bottom: 2rem;
 }
@@ -1053,7 +1073,8 @@ a:focus {
 
 .footer-links {
     display: grid;
-    grid-template-columns: 1fr; /* Single column on mobile */
+    grid-template-columns: 1fr;
+    /* Single column on mobile */
     gap: 2rem;
 }
 
@@ -1078,7 +1099,8 @@ a:focus {
     display: inline-block;
     font-size: 0.95rem;
     color: #ECE8DF;
-    min-height: 44px; /* Tap target */
+    min-height: 44px;
+    /* Tap target */
     line-height: 44px;
 }
 
@@ -1132,7 +1154,11 @@ a:focus {
         bottom: 1.5rem;
         width: 72px;
     }
-    .back-to-top img { width: 64px; height: 64px; }
+
+    .back-to-top img {
+        width: 64px;
+        height: 64px;
+    }
 }
 
 /* ========================================
@@ -1140,6 +1166,7 @@ a:focus {
    ======================================== */
 
 @media (min-width: 768px) {
+
     /* Layout */
     .container {
         padding: 0 1.5rem;
@@ -1147,7 +1174,8 @@ a:focus {
 
     /* Header & Navigation */
     .nav-toggle {
-        display: none; /* Hide hamburger on tablet+ */
+        display: none;
+        /* Hide hamburger on tablet+ */
     }
 
     .main-nav {
@@ -1273,6 +1301,7 @@ a:focus {
    ======================================== */
 
 @media (min-width: 1024px) {
+
     /* Layout */
     .container {
         padding: 0 2rem;
