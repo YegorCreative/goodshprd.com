@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let imageHtml = '';
             if (p.image) {
                 // Initialize opacity: 0 via class, will transition to opacity: 1 when loaded
-                imageHtml = `<img src="${p.image}" alt="${p.name}" class="lazy-image" loading="lazy">`;
+                imageHtml = `<img src="${p.image}" alt="${p.name}" class="lazy-image loaded" loading="lazy">`;
             }
 
             return `

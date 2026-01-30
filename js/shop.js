@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="product-image">
                             ${badgeContainer}
                             <div class="placeholder-image"></div>
-                            <img data-src="${product.image}" alt="${product.name}" class="lazy-image">
+                            ${product.image ? `<img data-src="${product.image}" alt="${product.name}" class="lazy-image">` : ''}
                         </div>
                         <div class="product-info">
                             <h3 class="product-name">${product.name}</h3>
