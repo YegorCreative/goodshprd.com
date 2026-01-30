@@ -325,6 +325,60 @@ a:focus {
 }
 
 /* ========================================
+   How It Works Section (Mobile-First)
+   ======================================== */
+
+.how-it-works {
+    padding: 3rem 0;
+    background-color: #ECE8DF;
+    /* Soft card contrast */
+    text-align: center;
+}
+
+.hiw-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.hiw-item h4 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #1F1F1D;
+    font-weight: 400;
+}
+
+.hiw-item p {
+    font-size: 1rem;
+    color: #6B5E4A;
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.hiw-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+/* Tablet and Desktop for How It Works */
+@media (min-width: 768px) {
+    .hiw-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .hiw-actions {
+        flex-direction: row;
+        justify-content: center;
+        gap: 2rem;
+    }
+}
+
+/* ========================================
    Buttons (Mobile-First)
    ======================================== */
 
