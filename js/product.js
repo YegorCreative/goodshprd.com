@@ -1,36 +1,43 @@
 /**
  * Product Detail Functionality
- * Fetches product data and renders the detail page
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const errorContainer = document.getElementById('productError');
-    const contentContainer = document.getElementById('productContent');
-    const relatedSection = document.getElementById('relatedSection');
-
-    // Get Product ID from URL
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
+
+    const els = {
+        title: document.getElementById('productTitle'),
+        meta: document.getElementById('productMeta'),
+        error: document.getElementById('productError'),
+        layout: document.getElementById('productLayout'),
+        image: document.getElementById('productImage'),
+        price: document.getElementById('productPrice'),
+        availability: document.getElementById('productAvailability'),
+        description: document.getElementById('productDescription'),
+        badges: document.getElementById('productBadges'),
+        ctas: document.getElementById('productCtas'),
+        relatedGrid: document.getElementById('relatedGrid'),
+        relatedSection: document.querySelector('.related-section')
+    };
 
     if (!productId) {
         showError();
         return;
     }
 
-    // Fetch Data
     fetch('data/products.json')
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to load products');
-            return response.json();
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to load data');
+            return res.json();
         })
         .then(products => {
             const product = products.find(p => p.id === productId);
-            if (product) {
-                renderProduct(product);
-                renderRelated(product, products);
-            } else {
+            if (!product) {
                 showError();
+                return;
             }
+            renderProduct(product, products);
         })
         .catch(err => {
             console.error(err);
@@ -38,134 +45,174 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     function showError() {
-        if (contentContainer) contentContainer.style.display = 'none';
-        if (relatedSection) relatedSection.style.display = 'none';
-        if (errorContainer) errorContainer.style.display = 'block';
+        if (els.error) {
+            els.error.textContent = 'We couldn’t find that piece. ';
+            const link = document.createElement('a');
+            link.href = 'shop.html';
+            link.className = 'text-link';
+            link.textContent = 'Browse the collection.';
+            els.error.appendChild(link);
+        }
+        if (els.layout) els.layout.style.display = 'none';
+        if (els.relatedSection) els.relatedSection.style.display = 'none';
+
+        // Hide hero title text "Loading..." if error
+        if (els.title) els.title.textContent = '';
     }
 
-    function renderProduct(product) {
-        if (errorContainer) errorContainer.style.display = 'none';
-        if (contentContainer) contentContainer.style.display = 'block';
+    function renderProduct(product, allProducts) {
+        // Title
+        if (els.title) els.title.textContent = product.name;
 
-        // Set Page Title
-        document.title = `${product.name} | Good Shepherd`;
+        // Meta: Category · Era · Size
+        if (els.meta) {
+            const cat = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+            els.meta.textContent = `${cat} · ${product.era} · ${product.size}`;
+        }
 
-        // Populate Basic Info
-        setText('productTitle', product.name);
-        setText('productMeta', `${capitalize(product.category)} · ${product.era} · ${product.size}`);
-        setText('productPrice', `$${product.price}`);
-        setText('productDescription', product.description);
+        // Price
+        if (els.price) {
+            let pStr = String(product.price);
+            if (!pStr.startsWith('$')) pStr = '$' + pStr;
+            els.price.textContent = pStr;
+        }
 
-        // Availability Wrapper
-        const availContainer = document.getElementById('productAvailability');
-        if (availContainer) {
+        // Availability Badge
+        if (els.availability) {
+            els.availability.classList.remove('is-available', 'is-sold');
             if (product.available) {
-                availContainer.innerHTML = `<span class="availability-badge badge-available">Available</span>`;
+                els.availability.textContent = 'Available';
+                els.availability.classList.add('is-available');
             } else {
-                availContainer.innerHTML = `<span class="availability-badge badge-sold-detail">Sold</span>`;
+                els.availability.textContent = 'Sold';
+                els.availability.classList.add('is-sold');
             }
         }
 
         // Image
-        const imgContainer = document.getElementById('productImageContainer');
-        if (imgContainer) {
-            imgContainer.innerHTML = `
-                <div class="placeholder-image"></div>
-                <img src="${product.image}" alt="${product.name}" class="fade-in-image" onload="this.classList.add('loaded')">
-            `;
-        }
-
-        // Actions
-        const actionContainer = document.getElementById('productActions');
-        if (actionContainer) {
-            if (product.available) {
-                actionContainer.innerHTML = `
-                    <a href="appointments.html" class="button button-primary">Book Wardrobe Appointment</a>
-                    <a href="contact.html?subject=Inquiry: ${product.name} (${product.id})" class="button button-secondary">Contact About This Piece</a>
-                `;
+        if (els.image) {
+            if (product.image) {
+                els.image.src = product.image;
+                els.image.alt = product.name;
             } else {
-                actionContainer.innerHTML = `
-                    <p style="margin-bottom: 1rem; color: #6B5E4A;">This piece has found a new home.</p>
-                    <a href="shop.html?category=${product.category}" class="button button-secondary">Browse Similar Pieces</a>
-                `;
+                // Replace img with placeholder div
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder-image product-placeholder';
+                els.image.parentNode.replaceChild(placeholder, els.image);
             }
         }
 
-        // Dynamic Sections
-        const sectionContainer = document.getElementById('productSections');
-        if (sectionContainer) {
-            let sectionsHtml = '';
+        // Description
+        if (els.description && product.description) {
+            els.description.textContent = product.description;
+        }
 
-            // Standard/Sample Content logic if fields existed, 
-            // but for now we'll imply them or check if JSON has them.
-            // Since JSON currently just has "restored" and basic fields, we can add a generic blurb for restored items.
-
+        // Badges
+        if (els.badges) els.badges.innerHTML = '';
+        if (els.badges) {
+            // Condition
+            if (product.condition) {
+                createBadge(`Condition: ${product.condition}`);
+            }
+            // Restored
             if (product.restored) {
-                sectionsHtml += `
-                    <div class="detail-block">
-                        <h4>Restoration</h4>
-                        <p>This piece has been carefully inspected and restored by hand. Sewing, cleaning, and conditioning have been performed to ensure it’s ready for wear.</p>
-                    </div>
-                `;
+                createBadge('Restored');
             }
-
-            // Always add a care section
-            sectionsHtml += `
-                <div class="detail-block">
-                    <h4>Care</h4>
-                    <p>Vintage garments require gentle care. We recommend spot cleaning or professional dry cleaning when necessary.</p>
-                </div>
-            `;
-
-            sectionContainer.innerHTML = sectionsHtml;
+            // Category (Optional)
+            if (product.category) {
+                createBadge(product.category.charAt(0).toUpperCase() + product.category.slice(1));
+            }
         }
+
+        // CTAs
+        if (els.ctas) els.ctas.innerHTML = '';
+        if (els.ctas) {
+            if (product.available) {
+                // Book Appointment
+                const btnPrimary = document.createElement('a');
+                btnPrimary.href = 'appointments.html';
+                btnPrimary.className = 'button button-primary';
+                btnPrimary.textContent = 'Book Appointment';
+                els.ctas.appendChild(btnPrimary);
+
+                // Ask About This Piece
+                const btnSecondary = document.createElement('a');
+                btnSecondary.href = `contact.html?item=${encodeURIComponent(product.id)}`;
+                btnSecondary.className = 'button button-secondary';
+                btnSecondary.textContent = 'Ask About This Piece';
+                els.ctas.appendChild(btnSecondary);
+            } else {
+                // Browse Similar
+                const btnPrimary = document.createElement('a');
+                btnPrimary.href = `shop.html?category=${product.category}`;
+                btnPrimary.className = 'button button-primary';
+                btnPrimary.textContent = 'Browse Similar Pieces';
+                els.ctas.appendChild(btnPrimary);
+
+                // Contact
+                const btnSecondary = document.createElement('a');
+                btnSecondary.href = 'contact.html';
+                btnSecondary.className = 'button button-secondary';
+                btnSecondary.textContent = 'Contact';
+                els.ctas.appendChild(btnSecondary);
+            }
+        }
+
+        // Related
+        renderRelated(product, allProducts);
+    }
+
+    function createBadge(text) {
+        if (!els.badges) return;
+        const span = document.createElement('span');
+        span.className = 'product-pill';
+        span.textContent = text;
+        els.badges.appendChild(span);
     }
 
     function renderRelated(currentProduct, allProducts) {
-        const relatedGrid = document.getElementById('relatedGrid');
-        if (!relatedGrid) return;
+        if (!els.relatedGrid) return;
 
-        // Filter: Same category, not current product, prioritize available
-        let related = allProducts
-            .filter(p => p.category === currentProduct.category && p.id !== currentProduct.id)
-            .sort((a, b) => (b.available === a.available) ? 0 : b.available ? 1 : -1) // Available first
-            .slice(0, 3); // Max 3
+        // Filter: same category, different ID
+        let related = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
+
+        // Sort: Available first
+        related.sort((a, b) => (a.available === b.available) ? 0 : a.available ? -1 : 1);
+
+        // Slice max 3
+        related = related.slice(0, 3);
 
         if (related.length === 0) {
-            if (relatedSection) relatedSection.style.display = 'none';
+            if (els.relatedSection) els.relatedSection.style.display = 'none';
             return;
         }
 
-        if (relatedSection) relatedSection.style.display = 'block';
+        els.relatedGrid.innerHTML = related.map(p => {
+            const priceStr = String(p.price).startsWith('$') ? p.price : '$' + p.price;
 
-        relatedGrid.innerHTML = related.map(p => {
-            const buttonText = p.available ? 'View Details' : 'Sold Out';
+            // Image handling
+            let imageMarkup = '';
+            if (p.image) {
+                imageMarkup = `<img src="${p.image}" alt="${p.name}" class="lazy-image" style="opacity: 1;" loading="lazy">`;
+            } else {
+                imageMarkup = `<div class="placeholder-image"></div>`;
+            }
+
             return `
-                <article class="product-card">
-                    <a href="product.html?id=${p.id}" class="product-card-link">
-                        <div class="product-image">
-                            ${!p.available ? '<div class="product-badges"><span class="product-badge badge-sold">Sold</span></div>' : ''}
-                            <div class="placeholder-image"></div>
-                            <img src="${p.image}" alt="${p.name}" class="lazy-image" style="opacity: 1;"> 
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">${p.name}</h3>
-                            <p class="product-description">${p.era} | ${p.size}</p>
-                            <p class="product-price">$${p.price}</p>
-                            <span class="button button-secondary product-button" style="${!p.available ? 'opacity: 0.5' : ''}">${buttonText}</span>
-                        </div>
-                    </a>
-                </article>
-            `;
+            <article class="product-card">
+                <a href="product.html?id=${p.id}" class="product-card-link" aria-label="View details for ${p.name}">
+                    <div class="product-image">
+                        ${!p.available ? '<div class="product-badges"><span class="product-badge badge-sold">Sold</span></div>' : ''}
+                        ${imageMarkup}
+                    </div>
+                    <div class="product-info">
+                        <h4 class="product-name">${p.name}</h4>
+                        <p class="product-description">${p.era} | ${p.size}</p>
+                        <p class="product-price">${priceStr}</p>
+                    </div>
+                </a>
+            </article>
+          `;
         }).join('');
-    }
-
-    function setText(id, text) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = text;
-    }
-
-    function capitalize(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
     }
 });

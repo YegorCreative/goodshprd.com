@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Vintage and restored clothing detail key Good Shepherd — Minnesota-rooted craftsmanship">
+        content="Vintage and restored clothing detail at Good Shepherd — Minnesota-rooted craftsmanship">
     <title>Product Detail | Good Shepherd</title>
 
     <!-- Favicon -->
@@ -58,71 +58,45 @@
     </header>
 
     <main>
-
-        <!-- Breadcrumb -->
-        <div class="container" style="padding-top: 1.5rem; padding-bottom: 1rem;">
-            <a href="shop.html" class="breadcrumb-link" style="color: #6B5E4A; font-size: 0.9rem;">← Back to Shop</a>
-        </div>
-
-        <!-- Product Error State -->
-        <div id="productError" class="container" style="display: none; padding: 4rem 1rem; text-align: center;">
-            <h2>We couldn’t find that piece.</h2>
-            <p style="margin-bottom: 2rem; color: #6B5E4A;">It may have been removed or the link is incorrect.</p>
-            <a href="shop.html" class="button button-primary" style="max-width: 200px; margin: 0 auto;">Return to
-                Shop</a>
-        </div>
-
-        <!-- Product Content -->
-        <div id="productContent" class="product-detail-section" style="display: none;">
+        <section class="page-hero">
             <div class="container">
-                <div class="product-detail-layout">
-
-                    <!-- Left Column: Images -->
-                    <div class="product-gallery">
-                        <div class="product-main-image" id="productImageContainer">
-                            <!-- JS injects img here -->
-                        </div>
-                        <div id="productThumbs" class="product-thumbs">
-                            <!-- JS injects thumbnails here -->
-                        </div>
-                    </div>
-
-                    <!-- Right Column: Details -->
-                    <div class="product-details-col">
-                        <h1 id="productTitle" class="product-detail-title"></h1>
-                        <p id="productMeta" class="product-detail-meta"></p>
-
-                        <div class="product-price-row">
-                            <span id="productPrice" class="product-detail-price"></span>
-                            <span id="productAvailability"></span>
-                        </div>
-
-                        <div id="productDescription" class="product-detail-description"></div>
-
-                        <div class="product-actions" id="productActions">
-                            <!-- JS injects buttons here -->
-                        </div>
-
-                        <!-- Dynamic Sections -->
-                        <div id="productSections" class="product-sections">
-                            <!-- JS injects Story, Care, etc. -->
-                        </div>
-                    </div>
-
-                </div>
+                <a class="breadcrumb-link" href="shop.html">← Back to Shop</a>
+                <h2 class="page-title" id="productTitle">Loading…</h2>
+                <p class="page-subtitle" id="productMeta"></p>
             </div>
-        </div>
+        </section>
 
-        <!-- Related Products (Optional) -->
-        <section id="relatedSection" class="shop-section" style="display: none; padding-top: 0;">
+        <section class="product-page">
             <div class="container">
-                <h3 class="section-title">You might also like</h3>
-                <div id="relatedGrid" class="products-grid">
-                    <!-- JS injects related items -->
+                <p id="productError" class="product-error" aria-live="polite"></p>
+
+                <div id="productLayout" class="product-detail">
+                    <div class="product-media">
+                        <img id="productImage" class="product-main-image" alt="" />
+                    </div>
+
+                    <div class="product-buy">
+                        <div class="product-price-row">
+                            <p id="productPrice" class="product-price"></p>
+                            <span id="productAvailability" class="availability-badge"></span>
+                        </div>
+
+                        <p id="productDescription" class="product-description"></p>
+
+                        <div id="productBadges" class="product-badges"></div>
+
+                        <div id="productCtas" class="product-ctas"></div>
+                    </div>
                 </div>
             </div>
         </section>
 
+        <section class="related-section">
+            <div class="container">
+                <h3 class="section-title">Related Pieces</h3>
+                <div id="relatedGrid" class="products-grid"></div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
