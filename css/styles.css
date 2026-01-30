@@ -498,6 +498,52 @@ a:focus {
 }
 
 /* ========================================
+   Shop Page Helpers (replacing inline styles)
+   ======================================== */
+
+.shop-intro {
+    text-align: center;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-style: italic;
+    color: #6B5E4A;
+}
+
+.shop-cta {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    color: #6B5E4A;
+}
+
+.shop-cta p {
+    margin-bottom: 0.5rem;
+    font-style: italic;
+}
+
+.loading-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+    color: #6B5E4A;
+}
+
+/* ========================================
+   Footer Spacing Safety (fix CTA buttons hugging footer)
+   ======================================== */
+
+main>section:last-child {
+    padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+    main>section:last-child {
+        padding-bottom: 5rem;
+    }
+}
+
+/* ========================================
    Shop Section (Mobile-First)
    ======================================== */
 
