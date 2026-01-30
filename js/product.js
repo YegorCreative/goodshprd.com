@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Ask About This Piece
                 const btnSecondary = document.createElement('a');
-                btnSecondary.href = `contact.html?item=${encodeURIComponent(product.id)}`;
+                btnSecondary.href = `contact.html?item=${encodeURIComponent(product.id)}&name=${encodeURIComponent(product.name)}`;
                 btnSecondary.className = 'button button-secondary';
                 btnSecondary.textContent = 'Ask About This Piece';
                 els.ctas.appendChild(btnSecondary);

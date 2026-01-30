@@ -1835,3 +1835,30 @@ button:focus,
         transform: translateY(0);
     }
 }
+
+/* Form Confirmation Message (Hidden by default) */
+.form-confirmation {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+    background-color: #F1F8F6;
+    /* Gentle green hint */
+    border: 1px solid #D1E7DD;
+    border-radius: 6px;
+    margin-top: 2rem;
+}
+
+.form-confirmation.is-visible {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.confirmation-title {
+    color: #0F5132;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.confirmation-text {
+    color: #444;
+}
