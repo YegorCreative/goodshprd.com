@@ -198,7 +198,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Image handling
             let imageHtml = '';
             if (p.image) {
-                // Initialize opacity: 0 via class, will transition to opacity: 1 when loaded
                 imageHtml = `<img src="${p.image}" alt="${p.name}" class="lazy-image loaded" loading="lazy">`;
             }
 
