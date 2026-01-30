@@ -208,29 +208,76 @@
     // Booking Form Handler
     // ========================================
 
-    function initBookingForm() {
-        const form = document.querySelector('.booking-form');
-        const confirmation = document.querySelector('.form-confirmation');
 
-        if (!form || !confirmation) return;
+    // ========================================
+    // Form UX (client-side confirmation, no backend)
+    // ========================================
+    function initFormsUX() {
+        // Booking form (appointments)
+        const bookingForm = document.querySelector('.booking-form');
+        const bookingConfirmation = document.getElementById('bookingConfirmation'); // Use ID if available, likely class .form-confirmation in markup
 
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
+        // Fallback for ID if not present but class is
+        const bookingConfEl = bookingConfirmation || document.querySelector('.booking-section .form-confirmation');
 
-            // UI Updates - Immediately show feedback
-            form.style.display = 'none';
-            confirmation.classList.add('is-visible');
+        if (bookingForm && bookingConfEl) {
+            bookingForm.addEventListener('submit', (e) => {
+                e.preventDefault();
 
-            // Trigger mailto after brief delay
-            // Using logic: Prevent default -> Show UI -> Submit()
-            setTimeout(() => {
-                form.submit();
-                form.reset();
-            }, 100);
-        });
+                // Native validation
+                if (!bookingForm.reportValidity()) return;
+
+                bookingForm.reset();
+                bookingConfEl.classList.add('is-visible');
+
+                // Scroll confirmation into view (gentle)
+                bookingConfEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+
+        // Contact form
+        const contactForm = document.querySelector('.contact-form');
+        const contactConfirmation = document.getElementById('contactConfirmation');
+
+        // Prefill contact message if arriving with ?item=product-id
+        if (contactForm) {
+            const params = new URLSearchParams(window.location.search);
+            const item = params.get('item');
+            const messageEl = document.getElementById('contact-message');
+            const subjectEl = document.getElementById('contact-subject');
+
+            if (item && messageEl) {
+                if (subjectEl) subjectEl.value = 'product';
+                messageEl.value = `Hi — I have a question about this piece: ${item}\n\n`;
+            }
+        }
+
+        if (contactForm && contactConfirmation) {
+            contactForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!contactForm.reportValidity()) return;
+
+                contactForm.reset();
+                contactConfirmation.classList.add('is-visible');
+                contactConfirmation.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+
+        // Newsletter form
+        const newsletterForm = document.querySelector('.newsletter-form');
+        const newsletterConfirmation = document.getElementById('newsletterConfirmation');
+
+        if (newsletterForm && newsletterConfirmation) {
+            newsletterForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!newsletterForm.reportValidity()) return;
+
+                newsletterForm.reset();
+                newsletterConfirmation.classList.add('is-visible');
+                newsletterConfirmation.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
     }
-
-
 
     // ========================================
     // Initialize on DOM Ready
@@ -241,8 +288,8 @@
         initMobileNav();
         initSmoothScroll();
         initLazyLoad();
-        initBookingForm();
         initBackToTop();
+        initFormsUX();
 
         console.log('✓ Good Shepherd website initialized');
     });

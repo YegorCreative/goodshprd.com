@@ -35,6 +35,10 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+main {
+    padding-bottom: 3rem;
+}
+
 img {
     max-width: 100%;
     height: auto;
@@ -1282,6 +1286,10 @@ a:focus {
         padding: 0 1.5rem;
     }
 
+    main {
+        padding-bottom: 4rem;
+    }
+
     /* Header & Navigation */
     .nav-toggle {
         display: none;
@@ -1415,6 +1423,10 @@ a:focus {
     /* Layout */
     .container {
         padding: 0 2rem;
+    }
+
+    main {
+        padding-bottom: 5rem;
     }
 
     /* Header */
