@@ -113,6 +113,11 @@
                 <!-- Error message displayed if products fail to load -->
                 <div id="products-error" class="products-error" style="display: none;"></div>
 
+                <div class="shop-intro"
+                    style="text-align: center; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto; font-style: italic; color: #6B5E4A;">
+                    <p>One-of-a-kind pieces. Restored when needed. Always described honestly.</p>
+                </div>
+
                 <div class="shop-cta" style="text-align: center; margin-bottom: 2.5rem; color: #6B5E4A;">
                     <p style="margin-bottom: 0.5rem; font-style: italic;">Looking for guidance instead of browsing?</p>
                     <a href="appointments.html" class="text-link">Book a Wardrobe Appointment →</a>
@@ -120,34 +125,11 @@
 
                 <!-- Products grid is populated by js/shop.js -->
                 <div id="products-grid" class="products-grid">
-                    <!-- Products loaded dynamically by js/shop.js -->
-
-                    <!-- Product 8 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Wool Trousers</h3>
-                            <p class="product-description">1960s | Tailored fit</p>
-                            <p class="product-price">$105</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
-                    <!-- Product 9 -->
-                    <article class="product-card">
-                        <div class="product-image">
-                            <div class="placeholder-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Leather Belt</h3>
-                            <p class="product-description">1970s | Solid brass buckle</p>
-                            <p class="product-price">$45</p>
-                            <a href="#" class="button button-secondary product-button">View Details</a>
-                        </div>
-                    </article>
-
+                    <!-- Products loaded dynamically -->
+                    <div class="loading-state"
+                        style="grid-column: 1/-1; text-align: center; padding: 4rem; color: #6B5E4A;">
+                        Loading collection...
+                    </div>
                 </div>
             </div>
         </section>
@@ -217,8 +199,8 @@
     <!-- Stripe Checkout (for payment integration) -->
     <script src="/js/stripe-checkout.js"></script>
 
-    <!-- Shop Product Manager (loads products from JSON files) -->
-    <script src="/js/shop.js"></script>
+    <!-- Shop Logic -->
+    <script src="js/shop.js"></script>
 
     <!-- Other scripts -->
     <script src="js/script.js"></script>
