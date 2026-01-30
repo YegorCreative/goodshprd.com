@@ -1,44 +1,44 @@
+/**
+ * Contact Deep-Link Logic
+ * Handles ?item=<id> to prefill subject and message.
+ */
 document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const item = params.get('item');
-    const name = params.get('name');
+    const params = new URLSearchParams(location.search);
+    const itemId = params.get('item');
+    if (!itemId) return;
 
-    const contextEl = document.getElementById('contactContext');
-    const form = document.querySelector('.contact-form');
-    const messageField = document.getElementById('contact-message');
-    const subjectField = document.getElementById('contact-subject');
-    const confirmation = document.getElementById('contactConfirmation');
+    const subject = document.getElementById('contact-subject');
+    const message = document.getElementById('contact-message');
 
-    // ---- Product context ----
-    if (item && name && contextEl) {
-        contextEl.textContent = `About this piece: ${decodeURIComponent(name)} (${item})`;
+    // Always set subject if present
+    if (subject) subject.value = 'product';
 
-        if (subjectField) subjectField.value = 'product';
+    // Only proceed to prefill message if it exists and is effectively empty
+    const shouldPrefill = message && message.value.trim().length === 0;
 
-        if (messageField && !messageField.value) {
-            messageField.value = `Hi, I’m interested in ${decodeURIComponent(name)} (${item}).\n\n`;
+    const fallbackPrefill = () => {
+        if (message && shouldPrefill) {
+            message.value = `Hi Good Shepherd,\n\nI’m interested in item: ${itemId}.\n\nMy question:\n`;
         }
-    }
+    };
 
-    // ---- Fake submit / confirmation ----
-    if (!form) return;
-
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-
-        form.reset();
-
-        if (confirmation) {
-            confirmation.classList.add('is-visible');
-            confirmation.innerHTML = `
-        <p class="confirmation-title">Message sent</p>
-        <p class="confirmation-text">Thanks for reaching out. We’ll get back to you within 24 hours.</p>
-      `;
-        }
-    });
+    // Attempt to fetch product details for a nicer prefill
+    fetch('data/products.json')
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
+        .then(list => {
+            const p = Array.isArray(list) ? list.find(x => x && x.id === itemId) : null;
+            if (p && message && shouldPrefill) {
+                message.value = `Hi Good Shepherd,\n\nI’m interested in: ${p.name} (${p.id}).\n\nMy question:\n`;
+            } else if (!p) {
+                // Product ID not found in JSON, fall back to raw ID
+                fallbackPrefill();
+            }
+        })
+        .catch(() => {
+            // Fetch failed, fall back to raw ID
+            fallbackPrefill();
+        });
 });
