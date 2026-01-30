@@ -138,17 +138,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return `
                 <article class="product-card">
-                    <div class="product-image">
-                        ${badgeContainer}
-                        <div class="placeholder-image"></div>
-                        <img data-src="${product.image}" alt="${product.name}" class="lazy-image">
-                    </div>
-                    <div class="product-info">
-                        <h3 class="product-name">${product.name}</h3>
-                        <p class="product-description">${product.era} | ${product.condition} | ${product.size}</p>
-                        <p class="product-price">$${product.price}</p>
-                        <a href="#" class="button button-secondary product-button" ${!product.available ? 'style="opacity: 0.5; pointer-events: none;"' : ''}>${buttonText}</a>
-                    </div>
+                    <a href="product.html?id=${product.id}" class="product-card-link" aria-label="View details for ${product.name}">
+                        <div class="product-image">
+                            ${badgeContainer}
+                            <div class="placeholder-image"></div>
+                            <img data-src="${product.image}" alt="${product.name}" class="lazy-image">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">${product.name}</h3>
+                            <p class="product-description">${product.era} | ${product.condition} | ${product.size}</p>
+                            <p class="product-price">$${product.price}</p>
+                            <span class="button button-secondary product-button" ${!product.available ? 'style="opacity: 0.5;"' : ''}>${buttonText}</span>
+                        </div>
+                    </a>
                 </article>
             `;
     }).join('');
