@@ -94,6 +94,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (product.image) {
                 els.image.src = product.image;
                 els.image.alt = product.name;
+                els.image.loading = 'eager';
+
+                // Reset class
+                els.image.classList.remove('loaded');
+
+                const onImageLoad = () => {
+                    els.image.classList.add('loaded');
+                };
+
+                if (els.image.complete) {
+                    onImageLoad();
+                } else {
+                    els.image.addEventListener('load', onImageLoad, { once: true });
+                    els.image.addEventListener('error', () => {
+                        els.image.style.display = 'none';
+                    }, { once: true });
+                }
             } else {
                 // Replace img with placeholder div
                 const placeholder = document.createElement('div');
@@ -144,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Browse Similar
                 const btnPrimary = document.createElement('a');
-                btnPrimary.href = `shop.html?category=${product.category}`;
+                btnPrimary.href = `shop.html?category=${encodeURIComponent(product.category)}`;
                 btnPrimary.className = 'button button-primary';
                 btnPrimary.textContent = 'Browse Similar Pieces';
                 els.ctas.appendChild(btnPrimary);
@@ -191,11 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const priceStr = String(p.price).startsWith('$') ? p.price : '$' + p.price;
 
             // Image handling
-            let imageMarkup = '';
+            let imageHtml = '';
             if (p.image) {
-                imageMarkup = `<img src="${p.image}" alt="${p.name}" class="lazy-image" style="opacity: 1;" loading="lazy">`;
-            } else {
-                imageMarkup = `<div class="placeholder-image"></div>`;
+                // Initialize opacity: 0 via class, will transition to opacity: 1 when loaded
+                imageHtml = `<img src="${p.image}" alt="${p.name}" class="lazy-image" loading="lazy">`;
             }
 
             return `
@@ -203,7 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <a href="product.html?id=${p.id}" class="product-card-link" aria-label="View details for ${p.name}">
                     <div class="product-image">
                         ${!p.available ? '<div class="product-badges"><span class="product-badge badge-sold">Sold</span></div>' : ''}
-                        ${imageMarkup}
+                        <div class="placeholder-image"></div>
+                        ${imageHtml}
                     </div>
                     <div class="product-info">
                         <h4 class="product-name">${p.name}</h4>
@@ -214,5 +231,19 @@ document.addEventListener('DOMContentLoaded', () => {
             </article>
           `;
         }).join('');
+
+        // Attach listeners to related images
+        const images = els.relatedGrid.querySelectorAll('img');
+        images.forEach(img => {
+            const onLoad = () => img.classList.add('loaded');
+            if (img.complete) {
+                onLoad();
+            } else {
+                img.addEventListener('load', onLoad, { once: true });
+                img.addEventListener('error', () => {
+                    img.style.display = 'none';
+                }, { once: true });
+            }
+        });
     }
 });

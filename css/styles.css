@@ -1538,20 +1538,7 @@ a:focus {
         margin-top: 0.5rem;
     }
 
-    /* Tablet Service Grid */
-    @media (min-width: 768px) {
-        .service-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
 
-    /* Desktop Service Grid */
-    @media (min-width: 1024px) {
-        .service-grid {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-        }
-    }
 
     /* Products grid: 3 columns */
     .products-grid {
@@ -1595,6 +1582,21 @@ a:focus {
 
     .footer-bottom {
         padding-top: 2rem;
+    }
+}
+
+/* Tablet Service Grid */
+@media (min-width: 768px) {
+    .service-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Desktop Service Grid */
+@media (min-width: 1024px) {
+    .service-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
     }
 }
 
