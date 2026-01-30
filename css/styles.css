@@ -990,7 +990,14 @@ a:focus {
 
 .cta-section {
     padding: 3rem 0;
+    padding-bottom: 5rem;
     background-color: #ECE8DF;
+}
+
+@media (min-width: 1024px) {
+    .cta-section {
+        padding-bottom: 7rem;
+    }
 }
 
 .cta-content {
