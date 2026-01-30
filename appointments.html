@@ -71,24 +71,78 @@
         <section class="appointments-info">
             <div class="container">
                 <div class="info-content">
-                    <h3>What to Expect</h3>
+                    <h3>Personal Service</h3>
                     <p>
-                        At Good Shepherd, we believe shopping should be personal and unhurried.
-                        Book a private appointment to browse our curated collection, try pieces on,
-                        and receive guidance on fit, care, and styling.
-                    </p>
-                    <p>
-                        Each appointment is 60 minutes and available Tuesday through Saturday.
-                        We're located in Minneapolis, Minnesota.
+                        We believe in unhurried, personal, stewardship-minded service.
+                        Whether you're building a wardrobe or caring for what you own,
+                        we're here to help you move slower and choose better.
                     </p>
                 </div>
+            </div>
+        </section>
+
+        <!-- Service Menu -->
+        <section class="service-menu">
+            <div class="container">
+                <h3 class="section-title">Choose Your Visit</h3>
+                <p class="section-intro">Three ways we can serve you.</p>
+
+                <div class="service-grid">
+                    <!-- Service 1 -->
+                    <article class="service-card">
+                        <h4 class="service-title">Wardrobe Appointment</h4>
+                        <p class="service-duration">90 minutes</p>
+                        <p class="service-desc">For those who want fewer, better pieces.</p>
+                        <ul class="service-outcomes">
+                            <li>Clarity on what you need</li>
+                            <li>Personalized fit guidance</li>
+                            <li>A thoughtful plan forward</li>
+                        </ul>
+                    </article>
+
+                    <!-- Service 2 -->
+                    <article class="service-card">
+                        <h4 class="service-title">Care & Repair</h4>
+                        <p class="service-duration">Coordination</p>
+                        <p class="service-desc">For keeping your good pieces alive.</p>
+                        <ul class="service-outcomes">
+                            <li>Cleaning coordination</li>
+                            <li>Repair assessment</li>
+                            <li>Trusted partner network</li>
+                        </ul>
+                    </article>
+
+                    <!-- Service 3 -->
+                    <article class="service-card">
+                        <h4 class="service-title">Rehome & Replace</h4>
+                        <p class="service-duration">Trade-in</p>
+                        <p class="service-desc">For letting go of quality items responsibly.</p>
+                        <ul class="service-outcomes">
+                            <li>Responsible rehoming</li>
+                            <li>Trade-in credit</li>
+                            <li>Gap-filling intentionally</li>
+                        </ul>
+                    </article>
+                </div>
+                <p class="service-note">If you're not sure, choose Wardrobe Appointment and note your goal below.</p>
             </div>
         </section>
 
         <!-- Booking Form -->
         <section class="booking-section">
             <div class="container">
-                <form class="booking-form" action="#" method="post">
+                <!-- Replace YOUR_EMAIL_HERE with actual email address -->
+                <form class="booking-form" action="mailto:YOUR_EMAIL_HERE" method="post" enctype="text/plain">
+
+                    <div class="form-group">
+                        <label for="service" class="form-label">Service <span class="required">*</span></label>
+                        <select id="service" name="service" class="form-select" required>
+                            <option value="">Select a service</option>
+                            <option value="wardrobe">Wardrobe Appointment (90 min)</option>
+                            <option value="repair">Care & Repair Coordination</option>
+                            <option value="rehome">Rehome & Replace</option>
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label for="name" class="form-label">Full Name <span class="required">*</span></label>
@@ -108,6 +162,7 @@
                     <div class="form-group">
                         <label for="date" class="form-label">Preferred Date <span class="required">*</span></label>
                         <input type="date" id="date" name="date" class="form-input" required>
+                        <p class="form-helper">We'll confirm by email within 24 hours.</p>
                     </div>
 
                     <div class="form-group">
@@ -126,18 +181,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="interest" class="form-label">What are you looking for?</label>
-                        <select id="interest" name="interest" class="form-select">
-                            <option value="">Browse all</option>
-                            <option value="outerwear">Outerwear</option>
-                            <option value="shirts">Shirts</option>
-                            <option value="pants">Pants</option>
-                            <option value="accessories">Accessories</option>
-                            <option value="unsure">Not sure yet</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
                         <label for="notes" class="form-label">Additional Notes</label>
                         <textarea id="notes" name="notes" class="form-textarea" rows="4"
                             placeholder="Any specific questions or requests?"></textarea>
@@ -145,7 +188,6 @@
 
                     <div class="form-actions">
                         <button type="submit" class="button button-primary">Request Appointment</button>
-                        <p class="form-note">We'll confirm your appointment within 24 hours</p>
                     </div>
 
                 </form>
@@ -200,8 +242,8 @@
                         <h4>Connect</h4>
                         <ul>
                             <li><a href="contact.html">Contact</a></li>
-                            <li><a href="#instagram">Instagram</a></li>
-                            <li><a href="#newsletter">Newsletter</a></li>
+                            <li><a href="index.html#instagram">Instagram</a></li>
+                            <li><a href="index.html#newsletter">Newsletter</a></li>
                         </ul>
                     </div>
                 </div>

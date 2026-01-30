@@ -1402,9 +1402,122 @@ a:focus {
         padding: 3rem 0;
     }
 
+    .section-intro {
+        text-align: center;
+        font-size: 1.125rem;
+        color: #6B5E4A;
+        max-width: 600px;
+        margin: -1.5rem auto 3rem;
+        line-height: 1.6;
+    }
+
+    /* Service Menu */
+    .service-menu {
+        padding: 4rem 0 6rem;
+    }
+
+    .service-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .service-card {
+        background-color: #F6F4EF;
+        border: 1px solid #ECE8DF;
+        padding: 2rem;
+        text-align: left;
+    }
+
+    .service-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        color: #1F1F1D;
+        margin-bottom: 0.25rem;
+    }
+
+    .service-duration {
+        font-size: 0.875rem;
+        color: #6B5E4A;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1rem;
+    }
+
+    .service-desc {
+        font-size: 1rem;
+        color: #1F1F1D;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .service-outcomes {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .service-outcomes li {
+        font-size: 0.95rem;
+        color: #6B5E4A;
+        padding-left: 1.25rem;
+        position: relative;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .service-outcomes li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #6B5E4A;
+    }
+
+    .service-note {
+        text-align: center;
+        font-size: 0.95rem;
+        color: #6B5E4A;
+        font-style: italic;
+        margin-top: 2rem;
+    }
+
+    /* Form Helper */
+    .form-helper {
+        font-size: 0.875rem;
+        color: #6B5E4A;
+        margin-top: 0.5rem;
+    }
+
+    /* Tablet Service Grid */
+    @media (min-width: 768px) {
+        .service-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Desktop Service Grid */
+    @media (min-width: 1024px) {
+        .service-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+    }
+
     /* Products grid: 3 columns */
     .products-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* First product card spans 2 columns on desktop */
+    .products-grid .product-card:first-child {
+        grid-column: span 2;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .products-grid .product-card:first-child .placeholder-image {
+        aspect-ratio: 16/9;
     }
 
     /* Journal grid: 3 columns */
