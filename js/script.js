@@ -4,13 +4,13 @@
  * Minimal, calm, intentional interactions
  */
 
-(function() {
+(function () {
     'use strict';
 
     // ========================================
     // Mobile Navigation Toggle
     // ========================================
-    
+
     /**
      * Hamburger menu toggle for mobile navigation
      * Shows/hides navigation on mobile devices
@@ -18,7 +18,7 @@
     function initMobileNav() {
         const navToggle = document.querySelector('.nav-toggle');
         const siteHeader = document.querySelector('.site-header');
-        
+
         if (!navToggle || !siteHeader) {
             console.warn('Navigation elements not found');
             return;
@@ -37,9 +37,9 @@
         }
 
         // Toggle menu on button click
-        navToggle.addEventListener('click', function() {
+        navToggle.addEventListener('click', function () {
             const isOpen = siteHeader.classList.contains('nav-open');
-            
+
             if (isOpen) {
                 closeMenu();
             } else {
@@ -50,23 +50,23 @@
         // Close menu when navigation link is clicked
         const navLinks = document.querySelectorAll('.main-nav a');
         navLinks.forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function () {
                 closeMenu();
             });
         });
 
         // Close menu when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const isNavToggle = e.target.closest('.nav-toggle');
             const isNavMenu = e.target.closest('.main-nav');
-            
+
             if (!isNavToggle && !isNavMenu && siteHeader.classList.contains('nav-open')) {
                 closeMenu();
             }
         });
 
         // Close menu when Escape key is pressed
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && siteHeader.classList.contains('nav-open')) {
                 closeMenu();
                 navToggle.focus(); // Return focus to toggle button
@@ -79,7 +79,7 @@
     // ========================================
     // Smooth Scroll Enhancement
     // ========================================
-    
+
     /**
      * Enhance anchor link behavior with smooth scrolling
      * Adds offset for sticky header
@@ -88,26 +88,26 @@
         const links = document.querySelectorAll('a[href^="#"]');
         const header = document.querySelector('.site-header');
         const headerHeight = header ? header.offsetHeight : 0;
-        
+
         links.forEach(link => {
-            link.addEventListener('click', function(e) {
+            link.addEventListener('click', function (e) {
                 const targetId = this.getAttribute('href');
-                
+
                 // Skip if just #
                 if (targetId === '#' || targetId === '#home') {
                     e.preventDefault();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     return;
                 }
-                
+
                 const targetElement = document.querySelector(targetId);
-                
+
                 if (targetElement) {
                     e.preventDefault();
-                    
+
                     // Calculate position with header offset
                     const targetPosition = targetElement.offsetTop - headerHeight - 20;
-                    
+
                     window.scrollTo({
                         top: targetPosition,
                         behavior: 'smooth'
@@ -122,7 +122,7 @@
     // ========================================
     // Lazy Loading Images
     // ========================================
-    
+
     /**
      * Progressive image loading using Intersection Observer
      * Loads images when they enter viewport
@@ -130,7 +130,7 @@
     function initLazyLoad() {
         // Check for images with data-src attribute
         const lazyImages = document.querySelectorAll('img[data-src]');
-        
+
         if (lazyImages.length === 0) {
             return; // No lazy images to load
         }
@@ -162,7 +162,7 @@
     // ========================================
     // Remove no-js class if JavaScript is enabled
     // ========================================
-    
+
     function removeNoJsClass() {
         document.documentElement.classList.remove('no-js');
         document.documentElement.classList.add('js');
@@ -205,16 +205,45 @@
     }
 
     // ========================================
+    // Booking Form Handler
+    // ========================================
+
+    function initBookingForm() {
+        const form = document.querySelector('.booking-form');
+        const confirmation = document.querySelector('.form-confirmation');
+
+        if (!form || !confirmation) return;
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // UI Updates - Immediately show feedback
+            form.style.display = 'none';
+            confirmation.classList.add('is-visible');
+
+            // Trigger mailto after brief delay
+            // Using logic: Prevent default -> Show UI -> Submit()
+            setTimeout(() => {
+                form.submit();
+                form.reset();
+            }, 100);
+        });
+    }
+
+
+
+    // ========================================
     // Initialize on DOM Ready
     // ========================================
-    
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
         removeNoJsClass();
         initMobileNav();
         initSmoothScroll();
         initLazyLoad();
+        initBookingForm();
         initBackToTop();
-        
+
         console.log('✓ Good Shepherd website initialized');
     });
 

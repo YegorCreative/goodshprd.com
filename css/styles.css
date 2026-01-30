@@ -1578,3 +1578,52 @@ button:focus,
         transition: none !important;
     }
 }
+
+/* ========================================
+   Appointment Confirmation (Mobile-First)
+   ======================================== */
+
+.form-confirmation {
+    display: none;
+    background-color: #ECE8DF;
+    padding: 2rem;
+    border-radius: 4px;
+    text-align: center;
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.form-confirmation.is-visible {
+    display: block;
+}
+
+.confirmation-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #1F1F1D;
+}
+
+.confirmation-text {
+    color: #6B5E4A;
+    margin-bottom: 0;
+}
+
+.form-trust {
+    font-size: 0.875rem;
+    color: #6B5E4A;
+    font-style: italic;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
