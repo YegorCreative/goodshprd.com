@@ -62,7 +62,22 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.3s ease;
+}
+
+.product-image img.loaded {
+  opacity: 1;
+}
+
+.product-badge.badge-sold {
+  background: #ef4444;
+  color: #fff;
+}
+
+.product-badge.badge-restored {
+  background: #6b8e23;
+  color: #fff;
 }
 
 .product-card:hover .product-image img {
@@ -242,6 +257,7 @@
 
 /* Print styles */
 @media print {
+
   .product-btn,
   .product-card:hover {
     box-shadow: none;

@@ -209,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const images = container.querySelectorAll('img[data-src]');
     const loadImg = (img) => {
       img.src = img.dataset.src;
-      img.onload = () => img.classList.add('loaded');
+      // Use helper for fade-in logic
+      wireImageFade(img);
       img.removeAttribute('data-src');
     };
 
@@ -226,6 +227,22 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       images.forEach(loadImg);
     }
+  }
+
+  function wireImageFade(img) {
+    if (!img) return;
+    const onLoad = () => img.classList.add('loaded');
+    const onError = () => {
+      // If image fails, hide it so placeholder remains visible
+      img.style.display = 'none';
+    };
+    // If cached/instant
+    if (img.complete && img.naturalWidth > 0) {
+      onLoad();
+      return;
+    }
+    img.addEventListener('load', onLoad, { once: true });
+    img.addEventListener('error', onError, { once: true });
   }
 
   function capitalize(str) {

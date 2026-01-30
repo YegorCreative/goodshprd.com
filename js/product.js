@@ -98,19 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Reset class
                 els.image.classList.remove('loaded');
-
-                const onImageLoad = () => {
-                    els.image.classList.add('loaded');
-                };
-
-                if (els.image.complete) {
-                    onImageLoad();
-                } else {
-                    els.image.addEventListener('load', onImageLoad, { once: true });
-                    els.image.addEventListener('error', () => {
-                        els.image.style.display = 'none';
-                    }, { once: true });
-                }
+                wireImageFade(els.image);
             } else {
                 // Replace img with placeholder div
                 const placeholder = document.createElement('div');
@@ -233,17 +221,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
 
         // Attach listeners to related images
-        const images = els.relatedGrid.querySelectorAll('img');
-        images.forEach(img => {
-            const onLoad = () => img.classList.add('loaded');
-            if (img.complete) {
-                onLoad();
-            } else {
-                img.addEventListener('load', onLoad, { once: true });
-                img.addEventListener('error', () => {
-                    img.style.display = 'none';
-                }, { once: true });
-            }
-        });
+        const imgs = els.relatedGrid.querySelectorAll('img');
+        imgs.forEach(wireImageFade);
+    }
+
+    function wireImageFade(img) {
+        if (!img) return;
+        const onLoad = () => img.classList.add('loaded');
+        const onError = () => {
+            // If image fails, hide it so placeholder remains visible
+            img.style.display = 'none';
+        };
+        // If cached/instant
+        if (img.complete && img.naturalWidth > 0) {
+            onLoad();
+            return;
+        }
+        img.addEventListener('load', onLoad, { once: true });
+        img.addEventListener('error', onError, { once: true });
     }
 });
