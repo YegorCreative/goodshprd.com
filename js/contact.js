@@ -9,16 +9,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const subject = document.getElementById('contact-subject');
     const message = document.getElementById('contact-message');
+    const context = document.getElementById('contactContext');
 
     // Always set subject if present
     if (subject) subject.value = 'product';
+    if (!message) return;
 
-    // Only proceed to prefill message if it exists and is effectively empty
-    const shouldPrefill = message && message.value.trim().length === 0;
+    // Track whether the user has typed anything, to avoid overwriting.
+    let userTouchedMessage = message.value.trim().length > 0;
+    const markTouched = () => { userTouchedMessage = true; };
+    message.addEventListener('input', markTouched, { once: true });
+
+    const canPrefillNow = () => !userTouchedMessage && message.value.trim().length === 0;
+
+    const setContext = (text) => {
+        if (!context) return;
+        context.textContent = text;
+    };
 
     const fallbackPrefill = () => {
-        if (message && shouldPrefill) {
-            message.value = `Hi Good Shepherd,\n\nI’m interested in item: ${itemId}.\n\nMy question:\n`;
+        setContext(`Context: Item ${itemId}`);
+        if (canPrefillNow()) {
+            message.value = `Hi Good Shepherd,\n\nI'm interested in item: ${itemId}.\n\nMy question:\n`;
         }
     };
 
@@ -30,15 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(list => {
             const p = Array.isArray(list) ? list.find(x => x && x.id === itemId) : null;
-            if (p && message && shouldPrefill) {
-                message.value = `Hi Good Shepherd,\n\nI’m interested in: ${p.name} (${p.id}).\n\nMy question:\n`;
-            } else if (!p) {
-                // Product ID not found in JSON, fall back to raw ID
+
+            if (p) {
+                setContext(`Context: ${p.name} (${p.id})`);
+                if (canPrefillNow()) {
+                    message.value = `Hi Good Shepherd,\n\nI'm interested in: ${p.name} (${p.id}).\n\nMy question:\n`;
+                }
+            } else {
                 fallbackPrefill();
             }
         })
         .catch(() => {
-            // Fetch failed, fall back to raw ID
             fallbackPrefill();
         });
 });
