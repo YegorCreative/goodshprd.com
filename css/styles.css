@@ -1627,12 +1627,25 @@ a:focus {
     gap: 2rem;
 }
 
-.product-main-image {
+.product-media {
+    position: relative;
     width: 100%;
     aspect-ratio: 3/4;
-    object-fit: cover;
-    border-radius: 25px;
     background-color: #ECE8DF;
+    border-radius: 25px;
+    overflow: hidden;
+}
+
+.product-main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.product-main-image.loaded {
+    opacity: 1;
 }
 
 .product-placeholder {
