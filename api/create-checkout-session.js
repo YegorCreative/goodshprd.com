@@ -38,9 +38,7 @@ module.exports = async (req, res) => {
 
     // Determine the origin for success/cancel URLs
     // For Vercel/Netlify: use headers to construct absolute URL
-    const protocol = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.APP_ORIGIN || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000'}`;
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({

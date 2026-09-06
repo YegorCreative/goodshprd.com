@@ -2,10 +2,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/finance.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60},
-    "api/finance-page.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60},
-    "api/webhook.js": {"maxDuration": 60},
-    "api/create-checkout-session.js": {"maxDuration": 60}
+    "api/finance.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60, "runtime": "nodejs22.x"},
+    "api/finance-page.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60, "runtime": "nodejs22.x"},
+    "api/webhook.js": {"maxDuration": 60, "runtime": "nodejs22.x"},
+    "api/create-checkout-session.js": {"maxDuration": 60, "runtime": "nodejs22.x"}
   },
   "rewrites": [
     {"source": "/admin/finance", "destination": "/api/finance-page"},

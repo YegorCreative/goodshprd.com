@@ -45,9 +45,7 @@ exports.handler = async (event, context) => {
     }
 
     // Determine the origin for success/cancel URLs
-    const protocol = event.headers['x-forwarded-proto'] || 'https';
-    const host = event.headers['x-forwarded-host'] || event.headers.host || 'localhost:3000';
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.APP_ORIGIN || `${event.headers['x-forwarded-proto'] || 'https'}://${event.headers['x-forwarded-host'] || event.headers.host || 'localhost:3000'}`;
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({

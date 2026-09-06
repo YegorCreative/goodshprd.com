@@ -1,57 +1,128 @@
 'use strict';
-const csrf = document.querySelector('meta[name="csrf-token"]').content;
-const exponents = {USD:2,CAD:2,EUR:2,GBP:2,AUD:2,JPY:0,KWD:3};
-const today = new Date();
-const localDate = new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10);
-const filters = document.getElementById('filters');
-filters.elements.from.value = localDate.slice(0,7)+'-01';filters.elements.to.value = localDate;
-for(const input of document.querySelectorAll('input[type="date"]')) if(!input.value) input.value=localDate;
-function minor(value,currency) {
- const exponent=exponents[currency];
- if(!new RegExp('^\\d+(?:\\.\\d{1,'+Math.max(exponent,1)+'})?$').test(value) || (exponent===0 && value.includes('.'))) throw Error('Enter an amount with the correct decimal places for '+currency);
- const [whole,fraction='']=value.split('.');const result=BigInt(whole)*10n**BigInt(exponent)+BigInt(fraction.padEnd(exponent,'0') || '0');
- if(result>100000000000n) throw Error('Amount is too large');return Number(result);
-}
-function money(value,currency) {
- const n=BigInt(value),scale=10n**BigInt(exponents[currency]);const abs=n<0n?-n:n;
- return `${currency} ${n<0n?'-':''}${(abs/scale).toLocaleString()}${exponents[currency]?'.'+String(abs%scale).padStart(exponents[currency],'0'):''}`;
-}
-async function api(path,options={}) {
- const res=await fetch(path,{...options,credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf,...options.headers}});
- if(res.status===401){location.assign('/admin/finance/');throw Error('Session expired');}
- const data=await res.json();if(!res.ok) throw Error(data.error || 'Request failed');return data;
-}
-function rows(id,records,columns) {
- const body=document.getElementById(id);body.replaceChildren();
- if(!records.length){const tr=body.insertRow(),cell=tr.insertCell();cell.colSpan=columns.length;cell.textContent='No records in this period.';return;}
- for(const record of records){const tr=body.insertRow();for(const column of columns) tr.insertCell().textContent=column(record) || '—';}
-}
-async function refresh() {
- const status=document.getElementById('status');status.textContent='Loading…';
- try {
-  const query=new URLSearchParams(new FormData(filters));
-  const [summary,sales,expenses]=await Promise.all(['summary','orders','expenses'].map(route=>api('/api/admin/finance/'+route+'?'+query)));
-  for(const key of ['revenue','collected','refunds','expenses','estimatedProfit']) document.getElementById(key).textContent=money(summary[key],summary.currency);
-  document.getElementById('cost-warning').textContent=summary.missingCostItems ? `${summary.missingCostItems} sale item(s) have unknown costs. Estimated profit is incomplete.` : 'Profit uses recorded costs and expenses. Check that all costs and fees have been entered.';
-  rows('sales',sales.records,[r=>r.sale_date.slice(0,10),r=>r.customer,r=>r.item,r=>money(r.total,r.currency),r=>r.payment_status,r=>r.source]);
-  rows('expense-rows',expenses.records,[r=>r.expense_date.slice(0,10),r=>r.category,r=>r.description,r=>money(r.amount,r.currency)]);
-  status.textContent=`${summary.currency} · ${summary.from} through ${summary.to}`;
- }catch(error){status.textContent=error.message;}
-}
-filters.addEventListener('submit',event=>{event.preventDefault();refresh();});
-for(const [id,resource] of [['sale-form','orders'],['expense-form','expenses']]) {
- const form=document.getElementById(id);let requestKey=crypto.randomUUID();
- form.addEventListener('submit',async event=>{
-  event.preventDefault();const button=form.querySelector('button'),message=form.querySelector('.form-message');button.disabled=true;message.textContent='Saving…';
-  try {
-   const body=Object.fromEntries(new FormData(form));
-   if(resource==='orders'){body.unit_price=minor(body.unit_price,body.currency);body.unit_cost=body.unit_cost.trim()===''?null:minor(body.unit_cost,body.currency);body.quantity=Number(body.quantity);}
-   else body.amount=minor(body.amount,body.currency);
-   await api('/api/admin/finance/'+resource,{method:'POST',body:JSON.stringify(body),headers:{'Idempotency-Key':requestKey}});
-   requestKey=crypto.randomUUID();form.reset();for(const input of form.querySelectorAll('input[type="date"]'))input.value=localDate;
-   message.textContent='Saved. Records outside the selected dates or currency will not appear above.';await refresh();
-  }catch(error){message.textContent=error.message+' If the connection was interrupted, refresh and check recent records before submitting again.';}finally{button.disabled=false;}
+(() => {
+ const $=id=>document.getElementById(id),csrf=document.querySelector('meta[name="csrf-token"]').content;
+ const exponents={USD:2,CAD:2,EUR:2,GBP:2,AUD:2,JPY:0,KWD:3};
+ const names={paid:'Paid',pending:'Pending / unpaid',partial:'Partially paid',refunded:'Refunded',partially_refunded:'Partially refunded',succeeded:'Succeeded',failed:'Failed'};
+ const views={overview:['Financial overview','A clear view of what comes in, what goes out, and what remains.'],sales:['Sales','Every sale, with the details and payment history that matter.'],expenses:['Expenses','Keep spending clear, correct, and accounted for.'],customers:['Customers','The people behind your sales, all in one private place.'],reports:['Reports','See the patterns behind your business, one period at a time.']};
+ let active='overview',sequence=0,controller,selectedCustomer=null,editing=null,deleting=null,historyCustomer=null,historyOffset=0,products=[],currentOrder=null;
+ const offsets={sales:0,expenses:0,customers:0,reports:0};
+ const keys={sale:crypto.randomUUID(),expense:crypto.randomUUID(),delete:crypto.randomUUID(),payment:crypto.randomUUID(),refund:crypto.randomUUID()};
+ function localDay(d=new Date()){return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+ function decimal(value,currency) {const n=BigInt(value),scale=10n**BigInt(exponents[currency]),abs=n<0n?-n:n;return (n<0n?'-':'')+String(abs/scale)+(exponents[currency]?'.'+String(abs%scale).padStart(exponents[currency],'0'):'');}
+ function money(value,currency=$('currency').value) {const str=decimal(value,currency),[whole,fraction]=str.split('.');return currency+' '+(str.startsWith('-')?'-':'')+BigInt(whole.replace('-','')).toLocaleString()+(fraction!==undefined?'.'+fraction:'');}
+ function minor(value,currency) {
+  const input=value.trim(),places=exponents[currency];
+  if(!new RegExp('^\\d+'+(places?'(?:\\.\\d{1,'+places+'})?':'')+'$').test(input))throw Error('Use '+places+' or fewer decimal places for '+currency+'.');
+  const [whole,part='']=input.split('.');const result=BigInt(whole)*10n**BigInt(places)+BigInt(part.padEnd(places,'0') || '0');
+  if(result>100000000000n)throw Error('Amount is too large.');return Number(result);
+ }
+ function el(tag,text,className){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node;}
+ function button(text,action,className='quiet'){const b=el('button',text,className);b.type='button';b.addEventListener('click',action);return b;}
+ function badge(status){return el('span',names[status] || status,'badge '+status);}
+ async function request(resource,{method='GET',data,key,signal,raw=false}={}) {
+  const res=await fetch('/api/admin/finance/'+resource,{method,credentials:'same-origin',cache:'no-store',signal,headers:{'Content-Type':'application/json','X-CSRF-Token':csrf,...(key?{'Idempotency-Key':key}:{})},...(data!==undefined?{body:JSON.stringify(data)}:{})});
+  if(res.status===401){location.assign('/admin/finance/');throw Error('Your session expired. Sign in again.');}
+  if(!res.ok){const data=await res.json().catch(()=>({}));throw Error(data.error || 'Unable to load records. Try again.');}
+  return raw?res:res.json();
+ }
+ const query=(resource,filters,signal)=>request('query',{method:'POST',data:{resource,filters},signal});
+ function baseFilters(){return {from:$('filters').elements.from.value,to:$('filters').elements.to.value,currency:$('currency').value};}
+ function listFilters(view=active){const f=baseFilters();const form=$({sales:'sales-filters',expenses:'expense-filters',customers:'customer-filters'}[view]);if(form)Object.assign(f,Object.fromEntries(new FormData(form)));if(view==='expenses')f.archived=f.archived==='true';return {...f,offset:offsets[view] || 0};}
+ function period(){const range=FinanceDates.range($('preset').value);if(range){$('filters').elements.from.value=range.from;$('filters').elements.to.value=range.to;}}
+ function resetOffsets(){for(const key of Object.keys(offsets))offsets[key]=0;}
+ function table(id,records,columns,empty='No records match this period and these filters.'){
+  const body=$(id);body.replaceChildren();
+  if(!records.length){const tr=body.insertRow(),td=tr.insertCell();td.colSpan=columns.length;td.className='empty-cell';td.textContent=empty;return;}
+  for(const record of records){const tr=body.insertRow();for(const column of columns){const td=tr.insertCell(),value=column(record);if(value instanceof Node)td.append(value);else td.textContent=value===null || value===undefined || value===''?'—':String(value);}}
+ }
+ function pager(view,result){const target=document.querySelector('[data-pager="'+view+'"]');target.replaceChildren();target.append(el('span',result.records.length?`Showing ${result.offset+1}–${result.offset+result.records.length}`:'0 records'));
+  const prev=button('Previous',()=>{offsets[view]=Math.max(0,offsets[view]-50);refresh();}),next=button('Next',()=>{offsets[view]+=50;refresh();});prev.disabled=!result.offset;next.disabled=!result.hasMore;target.append(prev,next);
+ }
+ function salesTable(id,result){table(id,result.records,[r=>r.date,r=>r.customer,r=>r.item,r=>r.quantity,r=>money(r.total,r.currency),r=>{const node=el('span',money(r.cost,r.currency));if(r.missing_costs)node.append(el('small',r.missing_costs+' item cost(s) missing','subtle'));return node;},r=>badge(r.payment_status),r=>r.source,r=>r.id,r=>button('Details',()=>openOrder(r.id))]);}
+ function renderProductCosts(){const root=$('product-cost-rows');if(!root||!products.length)return;root.replaceChildren();for(const p of products){const row=el('div','', 'cost-row'),label=el('label',p.name);const input=document.createElement('input');input.type='text';input.inputMode='decimal';input.placeholder='Unknown';input.value=p.unit_cost==null?'':decimal(p.unit_cost,p.currency);const save=button('Save',async()=>{save.disabled=true;try{const amount=minor(input.value,p.currency);await request('product-costs',{method:'POST',data:{product_id:p.id,unit_cost:amount,currency:p.currency},key:crypto.randomUUID()});p.unit_cost=String(amount);$('status').textContent='Product cost saved.';}catch(e){$('status').textContent=e.message;}finally{save.disabled=false;}});label.append(input);row.append(label,el('span',p.currency),save);root.append(row);}}
+ function renderExpenses(result){table('expense-rows',result.records,[r=>r.date,r=>r.category,r=>r.description,r=>r.vendor,r=>money(r.amount,r.currency),r=>r.payment_method,r=>{const node=el('span',r.notes || '—');node.append(el('small','Revision '+r.version+(r.deleted_at?' · Deleted: '+r.deletion_reason:''),'subtle'));return node;},r=>{const group=el('div',undefined,'row-actions');if(!r.deleted_at)group.append(button('Edit',()=>openExpense(r)),button('Delete',()=>openDelete(r)));else group.textContent='Retained for audit';return group;}]);pager('expenses',result);}
+ function renderCustomers(result){table('customer-rows',result.records,[r=>button(r.name,()=>openCustomer(r.id),'link-button'),r=>r.email,r=>r.order_count,r=>money(r.revenue,result.currency),r=>r.last_purchase]);pager('customers',result);}
+ function renderPayments(result){table('payment-rows',result.records,[r=>r.date,r=>r.customer,r=>money(r.amount,r.currency),r=>r.method,r=>badge(r.status),r=>r.order_id]);pager('reports',result);}
+ function percent(value){const n=BigInt(value),abs=n<0n?-n:n;return (n<0n?'-':'+')+String(abs/10n)+'.'+String(abs%10n)+'%';}
+ function overview(data,report){for(const key of ['revenue','collected','outstanding','refunds','expenses','costOfGoodsSold','estimatedProfit']){$(key).textContent=money(data[key],data.currency);$('compare-'+key).textContent=data.comparison?.[key]!==null && data.comparison?.[key]!==undefined?percent(data.comparison[key])+' vs previous period':'';}
+  for(const label of document.querySelectorAll('.card-period'))label.textContent=data.from+' – '+data.to;
+  $('cost-warning').textContent=costWarning(data);
+  chart('chart-revenue',report.series,'revenue',data.currency);chart('chart-expenses',report.series,'expenses',data.currency);chart('chart-profit',report.series,'estimatedProfit',data.currency);
+ }
+ function costWarning(t){return t.missingCostItems?`${t.missingCostItems} sale item(s) have missing costs. Estimated profit is incomplete until those costs are recorded.`:'Profit is an estimate based on recorded costs and expenses. Include processing fees and avoid counting item costs twice.';}
+ function chart(id,series,key,currency){const root=$(id);root.replaceChildren();if(!series.length){root.append(el('p','No data for this range.','hint'));return;}
+  // Only plot server-returned aggregates. Scaling coordinates is presentation, not financial calculation.
+  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');svg.setAttribute('viewBox','0 0 440 180');svg.setAttribute('role','img');svg.setAttribute('aria-label',key+' for '+series[0].date+' through '+series.at(-1).date+'. Exact values are available in Reports.');
+  const values=series.map(row=>Number(row[key])),min=Math.min(0,...values),max=Math.max(0,...values),span=max-min || 1;
+  const x=i=>12+(series.length===1?202:i*404/(series.length-1)),y=n=>140-(n-min)/span*105;
+  const line=document.createElementNS(ns,'line');for(const [k,v] of Object.entries({x1:12,x2:416,y1:y(0),y2:y(0),class:'chart-axis'}))line.setAttribute(k,String(v));svg.append(line);
+  const path=document.createElementNS(ns,'polyline');path.setAttribute('points',values.map((n,i)=>x(i)+','+y(n)).join(' '));path.setAttribute('class','chart-line');svg.append(path);
+  if(values.length===1){const circle=document.createElementNS(ns,'circle');circle.setAttribute('cx',x(0));circle.setAttribute('cy',y(values[0]));circle.setAttribute('r','3');circle.setAttribute('fill','currentColor');svg.append(circle);}
+  for(const [text,xp,yp,anchor]of [[series[0].date,12,168,'start'],[series.at(-1).date,416,168,'end'],[money(series.reduce((highest,row)=>BigInt(row[key])>BigInt(highest)?row[key]:highest,'0'),currency),12,17,'start']]){const label=document.createElementNS(ns,'text');label.textContent=text;label.setAttribute('x',xp);label.setAttribute('y',yp);label.setAttribute('text-anchor',anchor);label.setAttribute('class','chart-text');svg.append(label);}
+  root.append(svg,el('p','Server totals · '+(series.length>1?'trend over selected period':'single period'),'chart-label'));
+ }
+ function renderReports(report){$('report-warning').textContent=costWarning(report.totals);const dl=$('profit-breakdown');dl.replaceChildren();for(const [label,key]of [['Revenue','revenue'],['− Refunds','refunds'],['− Cost of Goods','costOfGoodsSold'],['− Expenses','expenses'],['= Estimated Profit','estimatedProfit']]){const row=el('div');row.append(el('dt',label),el('dd',money(report.totals[key],report.currency)));dl.append(row);}
+  const statuses=$('payment-statuses');statuses.replaceChildren();for(const status of ['paid','pending','partial','refunded','partially_refunded']){const found=report.statuses.find(r=>r.payment_status===status),row=el('div',undefined,'status-row');row.append(badge(status),el('span',(found?.count || 0)+' orders'));statuses.append(row);}
+  statuses.append(el('p','Status reflects current lifetime payments/refunds for orders sold in this period. Pending includes unpaid and expired checkouts; these do not automatically count as revenue.','hint'));
+  table('revenue-report',report.series,[r=>report.group==='month'?r.date.slice(0,7):r.date,r=>money(r.revenue,report.currency),r=>money(r.expenses,report.currency),r=>money(r.estimatedProfit,report.currency)]);
+  table('category-report',report.categories,[r=>r.category,r=>money(r.amount,report.currency)]);
+ }
+ async function refresh(message=''){
+  const seq=++sequence;controller?.abort();controller=new AbortController();const signal=controller.signal;
+  $('view-content').setAttribute('aria-busy','true');$('view-content').hidden=false;$('status').className='';$('status').textContent='Loading '+active+'…';$('retry').hidden=true;
+  try{
+   const f=baseFilters();if(!f.from || !f.to || f.from>f.to)throw Error('Choose a valid start and end date.');
+   if(active==='overview'){const days=(Date.parse(f.to)-Date.parse(f.from))/86400000;const [data,report]=await Promise.all([query('summary',f,signal),query('reports',{...f,group:days>90?'month':'day'},signal)]);if(seq!==sequence)return;overview(data,report);}
+   if(active==='sales'){const result=await query('orders',listFilters(),signal);if(seq!==sequence)return;salesTable('sales',result);pager('sales',result);if(!products.length)products=(await request('products',{signal})).records;renderProductCosts();}
+   if(active==='expenses'){const result=await query('expenses',listFilters(),signal);if(seq!==sequence)return;renderExpenses(result);}
+   if(active==='customers'){const result=await query('customers',listFilters(),signal);if(seq!==sequence)return;renderCustomers(result);}
+   if(active==='reports'){const [report,payments]=await Promise.all([query('reports',{...f,group:$('report-group').value},signal),query('payments',{...f,offset:offsets.reports},signal)]);if(seq!==sequence)return;renderReports(report);renderPayments(payments);}
+   $('status').textContent=(message?message+' · ':'')+f.currency+' · '+f.from+' through '+f.to;
+  }catch(error){if(error.name==='AbortError'||seq!==sequence)return;$('status').textContent=error.message;$('status').className='error';$('retry').hidden=false;$('view-content').hidden=true;}
+  finally{if(seq===sequence)$('view-content').removeAttribute('aria-busy');}
+ }
+ function navigate(){const target=location.hash.slice(1);active=Object.hasOwn(views,target)?target:'overview';for(const [id]of Object.entries(views))$('view-'+id).hidden=id!==active;for(const link of document.querySelectorAll('[data-view]')){if(link.dataset.view===active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}[$('view-title').textContent,$('view-description').textContent]=views[active];refresh();}
+ async function exportData(resource,button){button.disabled=true;try{const response=await request('export',{method:'POST',data:{resource,filters:resource==='orders'?listFilters('sales'):resource==='expenses'?listFilters('expenses'):baseFilters()},raw:true});const blob=await response.blob(),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download='good-shepherd-'+resource+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);$('status').textContent='CSV exported. Store downloaded financial files privately.';}catch(error){$('status').textContent=error.message;}finally{button.disabled=false;}}
+ function prepareForm(form){form.reset();form.querySelector('.form-message').textContent='';for(const input of form.querySelectorAll('input[type="date"]'))input.value=localDay();form.elements.currency.value=$('currency').value;}
+ function clearCustomer(){selectedCustomer=null;$('sale-form').elements.customer.disabled=false;$('selected-customer').textContent='Or enter a new customer below.';$('customer-options').replaceChildren();}
+ async function openSale(){prepareForm($('sale-form'));clearCustomer();$('sale-customer-search').value='';$('partial-field').hidden=true;$('sale-form').elements.paid_amount.required=false;keys.sale=crypto.randomUUID();$('sale-dialog').showModal();
+  try{if(!products.length)products=(await request('products')).records;const select=$('sale-product');select.replaceChildren(new Option('Custom item',''));for(const p of products)select.append(new Option(p.name+(p.available?'':' · marked sold'),p.id));}catch(error){$('sale-form').querySelector('.form-message').textContent=error.message+' You can still enter a custom item.';}
+ }
+ function openExpense(record=null){editing=record;prepareForm($('expense-form'));keys.expense=crypto.randomUUID();$('expense-title').textContent=record?'Correct expense':'Add expense';$('correction-field').hidden=!record;$('expense-form').elements.reason.required=!!record;
+  if(record)for(const name of ['category','description','vendor','currency','expense_date','payment_method','notes','amount'])$('expense-form').elements[name].value=name==='amount'?decimal(record.amount,record.currency):name==='expense_date'?record.date:record[name] || '';
+  $('expense-dialog').showModal();
+ }
+ function openDelete(record){deleting=record;keys.delete=crypto.randomUUID();$('delete-form').reset();$('delete-form').querySelector('.form-message').textContent='';$('delete-description').textContent=record.description+' · '+money(record.amount,record.currency)+' · '+record.date;$('delete-dialog').showModal();}
+ async function openCustomer(id){historyCustomer=id;historyOffset=0;$('customer-dialog').showModal();await loadHistory();}
+ async function openOrder(id){$('order-dialog').showModal();$('order-status').textContent='Loading sale…';try{currentOrder=await request('order-detail',{method:'POST',data:{order_id:id}});renderOrder(currentOrder);}catch(e){$('order-status').textContent=e.message;}}
+ function renderOrder(o){$('order-status').textContent='';const root=$('order-details');root.replaceChildren();root.append(el('h3','Order '+o.id));root.append(el('p',[o.sale_date,o.customer_name||'No customer',o.source,badge(o.payment_status)].map(x=>x instanceof Node?x:x).join(' · ')));const dl=el('dl','', 'breakdown');for(const [label,val] of [['Total',money(o.total,o.currency)],['Amount paid',money(o.amount_paid,o.currency)],['Remaining balance',money(o.remaining_balance,o.currency)],['Refunds',money(o.refund_total,o.currency)],['Net collected',money(o.net_collected,o.currency)]]){const row=el('div');row.append(el('dt',label),el('dd',val));dl.append(row);}root.append(dl,el('h3','Items'));const items=el('ul');for(const i of o.items){const li=el('li',`${i.product_name_snapshot} · ${i.quantity} × ${money(i.unit_price,i.currency||o.currency)} · cost ${i.unit_cost==null?'unknown':money(i.unit_cost,o.currency)}`);items.append(li);}root.append(items,el('h3','Payments'));const pay=el('div');for(const p of o.payments){const row=el('p');row.append(el('span',`${p.payment_date} · ${money(p.amount,p.currency)} · ${p.method} · `),badge(p.status),button('Refund',()=>openRefund(p,o)));pay.append(row);}if(!o.payments.length)pay.append(el('p','No payments recorded.'));root.append(pay);if(BigInt(o.remaining_balance)>0n && !['refunded'].includes(o.payment_status))root.append(button('Record payment',()=>openPayment(o)));if(o.notes)root.append(el('p','Notes: '+o.notes));}
+ function openPayment(o){prepareForm($('payment-form'));$('payment-form').elements.amount.value='';$('payment-balance').textContent='Remaining balance: '+money(o.remaining_balance,o.currency);$('payment-form').dataset.currency=o.currency;$('payment-form').dataset.orderId=o.id;keys.payment=crypto.randomUUID();$('payment-dialog').showModal();}
+ function openRefund(p,o){prepareForm($('refund-form'));$('refund-form').elements.payment_id.value=p.id;$('refund-form').elements.amount.value='';$('refund-form').elements.refund_date.value=localDay();$('refund-balance').textContent='Refundable balance: '+money(BigInt(p.amount)-o.refunds.filter(r=>r.payment_id===p.id).reduce((n,r)=>n+BigInt(r.amount),0n),p.currency);$('refund-form').dataset.currency=p.currency;keys.refund=crypto.randomUUID();$('refund-dialog').showModal();}
+ async function loadHistory(){const id=historyCustomer,offset=historyOffset;$('history-status').textContent='Loading history…';try{const data=await request('customer-history',{method:'POST',data:{customer_id:id,filters:{...baseFilters(),offset}}});if(historyCustomer!==id||historyOffset!==offset)return;$('customer-title').textContent=data.customer.name;$('customer-details').textContent=[data.customer.email,data.customer.phone].filter(Boolean).join(' · ');table('history-sales',data.orders.records,[r=>r.date,r=>r.item,r=>money(r.total,r.currency),r=>badge(r.payment_status)]);table('history-payments',data.payments.records,[r=>r.date,r=>money(r.amount,r.currency),r=>r.method,r=>badge(r.status)]);const pager=$('history-pager');pager.replaceChildren();const prev=button('Previous',()=>{historyOffset-=50;loadHistory();}),next=button('Next',()=>{historyOffset+=50;loadHistory();});prev.disabled=!offset;next.disabled=!data.orders.hasMore&&!data.payments.hasMore;pager.append(el('span','History page '+(offset/50+1)),prev,next);$('history-status').textContent='Selected date range and currency · Payments remain recorded after a refund.';}catch(error){$('history-status').textContent=error.message;}}
+ let lookupTimer,lookupSequence=0;
+ $('sale-customer-search').addEventListener('input',()=>{clearTimeout(lookupTimer);const seq=++lookupSequence,term=$('sale-customer-search').value.trim();$('customer-options').replaceChildren();if(term.length<2)return;lookupTimer=setTimeout(async()=>{try{const result=await query('customers',{...baseFilters(),from:'1900-01-01',to:'9999-12-31',customer:term});if(seq!==lookupSequence)return;for(const c of result.records)$('customer-options').append(button(c.name+(c.email?' · '+c.email:''),()=>{selectedCustomer=c;$('sale-form').elements.customer.value='';$('sale-form').elements.customer.disabled=true;$('selected-customer').textContent='Selected: '+c.name;$('customer-options').replaceChildren();}));if(!result.records.length)$('customer-options').append(el('p','No match. Enter a new customer name below.','hint'));}catch(error){if(seq===lookupSequence)$('customer-options').textContent=error.message;}},250);});
+ $('clear-customer').addEventListener('click',clearCustomer);
+ $('sale-product').addEventListener('change',()=>{const product=products.find(p=>p.id===$('sale-product').value);if(!product)return;const form=$('sale-form');form.elements.product_name_snapshot.value=product.name;form.elements.unit_price.value=decimal(product.unit_price,product.currency);form.elements.currency.value=product.currency;form.elements.unit_cost.value='';$('product-hint').textContent='Catalog price filled in ('+product.currency+'). No cost is recorded for this product; add a known cost or leave it unknown.';});
+ $('sale-form').elements.payment_status.addEventListener('change',()=>{const partial=$('sale-form').elements.payment_status.value==='partial';$('partial-field').hidden=!partial;$('sale-form').elements.paid_amount.required=partial;});
+ for(const [id,kind]of [['sale-form','sale'],['expense-form','expense'],['delete-form','delete']])$(id).addEventListener('submit',async event=>{
+  event.preventDefault();const form=$(id),submit=form.querySelector('button[type="submit"]'),message=form.querySelector('.form-message');submit.disabled=true;message.textContent='Saving…';
+  try{const body=Object.fromEntries(new FormData(form));let resource='expenses',method='POST';
+   if(kind==='sale'){resource='orders';body.unit_price=minor(body.unit_price,body.currency);body.unit_cost=body.unit_cost.trim()===''?null:minor(body.unit_cost,body.currency);body.quantity=Number(body.quantity);if(body.payment_status==='partial')body.paid_amount=minor(body.paid_amount,body.currency);if(selectedCustomer)body.customer_id=selectedCustomer.id;}
+   else if(kind==='expense'){body.amount=minor(body.amount,body.currency);if(editing){method='PATCH';body.id=editing.id;body.version=editing.version;}}
+   else {method='DELETE';body.id=deleting.id;body.version=deleting.version;}
+   await request(resource,{method,data:body,key:keys[kind]});$(kind==='sale'?'sale-dialog':kind==='expense'?'expense-dialog':'delete-dialog').close();keys[kind]=crypto.randomUUID();resetOffsets();await refresh(kind==='delete'?'Expense deleted; original retained in audit history':kind==='sale'?'Sale saved':'Expense saved');
+  }catch(error){message.textContent=error.message+' If the connection was interrupted, retry the unchanged form to avoid a duplicate. If you close it, check records before re-entering.';}finally{submit.disabled=false;}
  });
-}
-document.getElementById('logout').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',body:'{}'});location.assign('/admin/finance/');}catch(error){document.getElementById('status').textContent=error.message;}});
-refresh();
+ $('payment-form').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,m=f.querySelector('.form-message'),b=f.querySelector('button[type=submit]');b.disabled=true;m.textContent='Saving…';try{await request('payments',{method:'POST',data:{order_id:f.dataset.orderId,amount:minor(f.elements.amount.value,f.dataset.currency),method:f.elements.method.value,payment_date:f.elements.payment_date.value,notes:f.elements.notes.value},key:keys.payment});f.closest('dialog').close();$('order-dialog').close();resetOffsets();await refresh('Payment recorded');}catch(err){m.textContent=err.message;}finally{b.disabled=false;}});
+ $('refund-form').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget,m=f.querySelector('.form-message'),b=f.querySelector('button[type=submit]');b.disabled=true;m.textContent='Saving…';try{await request('refunds',{method:'POST',data:{payment_id:f.elements.payment_id.value,amount:minor(f.elements.amount.value,f.dataset.currency),refund_date:f.elements.refund_date.value,reason:f.elements.reason.value,notes:f.elements.notes.value},key:keys.refund});f.closest('dialog').close();$('order-dialog').close();resetOffsets();await refresh('Refund recorded');}catch(err){m.textContent=err.message;}finally{b.disabled=false;}});
+ for(const b of document.querySelectorAll('[data-new-sale]'))b.addEventListener('click',openSale);
+ for(const b of document.querySelectorAll('[data-new-expense]'))b.addEventListener('click',()=>openExpense());
+ for(const b of document.querySelectorAll('[data-close]'))b.addEventListener('click',()=>$(b.dataset.close).close());
+ for(const b of document.querySelectorAll('[data-export]'))b.addEventListener('click',()=>exportData(b.dataset.export,b));
+ for(const id of ['filters','sales-filters','expense-filters','customer-filters'])$(id).addEventListener('submit',event=>{event.preventDefault();resetOffsets();refresh();});
+ $('preset').addEventListener('change',()=>{period();resetOffsets();if($('preset').value!=='custom')refresh();});
+ for(const name of ['from','to'])$('filters').elements[name].addEventListener('input',()=>{$('preset').value='custom';});
+ $('currency').addEventListener('change',()=>{resetOffsets();refresh();});$('report-group').addEventListener('change',()=>refresh());$('retry').addEventListener('click',()=>refresh());
+ $('logout').addEventListener('click',async()=>{try{const response=await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':csrf},body:'{}'});if(!response.ok)throw Error('Unable to log out. Try again.');location.assign('/admin/finance/');}catch(error){$('status').textContent=error.message;}});
+ window.addEventListener('hashchange',navigate);period();navigate();
+})();

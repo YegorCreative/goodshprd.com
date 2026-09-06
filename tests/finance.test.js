@@ -13,7 +13,7 @@ const filter={currency:'USD',from:'2026-01-01',to:'2026-12-31',offset:0};
 const manual={customer:'A customer',product_name_snapshot:'Wool coat',quantity:2,unit_price:1050,unit_cost:400,currency:'USD',sale_date:'2026-09-06',payment_status:'paid',payment_method:'cash'};
 const expense={category:'Supplies',description:'Thread',amount:125,currency:'USD',expense_date:'2026-09-06'};
 function request(path,token,method='GET',body,extra={}){return app({url:path,method,body:Buffer.from(body===undefined?'':JSON.stringify(body)),headers:{cookie:token?cookie('session',token,28800).split(';')[0]:'','content-type':'application/json',origin:process.env.APP_ORIGIN,'x-csrf-token':csrf,'idempotency-key':require('node:crypto').randomUUID(),...extra}});}
-before(async()=>{pg=new PGlite();await pg.exec(fs.readFileSync('db/migrations/001_finance.sql','utf8'));db={query:(s,p)=>pg.query(s,p),transaction:work=>pg.transaction(work)};app=createApp(db);});
+before(async()=>{pg=new PGlite();for(const name of fs.readdirSync('db/migrations').sort()) await pg.exec(fs.readFileSync('db/migrations/'+name,'utf8'));db={query:(s,p)=>pg.query(s,p),transaction:work=>pg.transaction(work)};app=createApp(db);});
 after(async()=>{await pg.close();});
 beforeEach(async()=>{
  await pg.exec('TRUNCATE audit_log,webhook_events,refunds,payments,order_items,orders,customers,expenses,sessions,users,oauth_states CASCADE');
@@ -170,3 +170,115 @@ test('Vercel and Netlify adapters preserve finance routing, auth, raw JSON and c
  assert.equal((await netlify(false,{db})({...get,headers:{}})).statusCode,401);
  const page=await netlify(false,{db})({...get,path:'/.netlify/functions/finance-page',rawUrl:undefined});assert.equal(page.statusCode,200);assert.match(page.body,/Add manual sale/);
 });
+const dashboardQuery=(resource,filters={})=>request('/api/admin/finance/query',ownerToken,'POST',{resource,filters:{...filter,...filters}});
+test('dashboard listings filter by inclusive date, customer, status, source and sort',async()=>{
+ await createSale(db,owner.id,{...manual,customer:'Alice',sale_date:'2026-09-01',unit_price:200});
+ await createSale(db,owner.id,{...manual,customer:'Bob',sale_date:'2026-09-30',unit_price:400,payment_status:'unpaid'});
+ await createSale(db,owner.id,{...manual,customer:'Alice',sale_date:'2026-10-01',unit_price:600});
+ let res=await dashboardQuery('orders',{from:'2026-09-01',to:'2026-09-30',sort:'amount_asc'});assert.equal(res.status,200,res.body);
+ let rows=JSON.parse(res.body).records;assert.equal(rows.length,2);assert.equal(rows[0].customer,'Alice');assert.equal(rows[0].quantity,'2');assert.equal(rows[0].cost,'800');
+ res=await dashboardQuery('orders',{payment_status:'pending',customer:'bob',source:'manual'});rows=JSON.parse(res.body).records;assert.equal(rows.length,1);assert.equal(rows[0].customer,'Bob');
+ assert.equal(JSON.parse((await dashboardQuery('orders',{source:'stripe'})).body).records.length,0);
+ assert.equal((await dashboardQuery('orders',{sort:'total; DROP TABLE users'})).status,400);
+ assert.equal((await dashboardQuery('orders',{from:'2026-02-30'})).status,400);
+});
+test('summary provides actual previous equivalent period comparison',async()=>{
+ await createSale(db,owner.id,{...manual,quantity:1,unit_price:1000,sale_date:'2026-08-31'});
+ await createSale(db,owner.id,{...manual,quantity:1,unit_price:1250,sale_date:'2026-09-01'});
+ const res=await dashboardQuery('summary',{from:'2026-09-01',to:'2026-09-01'});assert.equal(res.status,200,res.body);const data=JSON.parse(res.body);
+ assert.equal(data.revenue,'1250');assert.equal(data.previous.from,'2026-08-31');assert.equal(data.comparison.revenue,'250');
+ assert.equal(data.comparison.expenses,null);
+});
+test('expense corrections preserve before/after audit and reject stale updates',async()=>{
+ const initial=await createExpense(db,owner.id,expense);
+ const body={...expense,id:initial.id,version:1,amount:350,reason:'Corrected receipt amount'};
+ const res=await request('/api/admin/finance/expenses',ownerToken,'PATCH',body);assert.equal(res.status,200,res.body);assert.equal(JSON.parse(res.body).version,2);
+ const audit=(await db.query("SELECT metadata FROM audit_log WHERE action='expense.corrected'")).rows[0].metadata;
+ assert.equal(audit.before.amount,125);assert.equal(audit.after.amount,350);assert.equal(audit.reason,'Corrected receipt amount');
+ assert.equal((await request('/api/admin/finance/expenses',ownerToken,'PATCH',body)).status,409);
+ assert.equal((await summary(db,filter)).expenses,'350');
+ assert.equal((await request('/api/admin/finance/expenses',ownerToken,'PATCH',{...body,version:2,reason:''})).status,400);
+});
+test('expense deletion requires confirmation, retains row, and excludes it from reports/exports',async()=>{
+ const initial=await createExpense(db,owner.id,expense);const body={id:initial.id,version:1,reason:'Duplicate receipt'};
+ assert.equal((await request('/api/admin/finance/expenses',ownerToken,'DELETE',body)).status,400);
+ const key=require('node:crypto').randomUUID();const headers={'idempotency-key':key};body.confirmation='DELETE';
+ assert.equal((await request('/api/admin/finance/expenses',ownerToken,'DELETE',body,headers)).status,200);
+ assert.equal((await request('/api/admin/finance/expenses',ownerToken,'DELETE',body,headers)).status,200);
+ const row=(await db.query('SELECT * FROM expenses')).rows[0];assert.ok(row.deleted_at);assert.equal(row.deleted_by,owner.id);assert.equal(row.deletion_reason,'Duplicate receipt');
+ assert.equal((await summary(db,filter)).expenses,'0');
+ assert.equal(JSON.parse((await dashboardQuery('expenses')).body).records.length,0);
+ assert.equal(JSON.parse((await dashboardQuery('expenses',{archived:true})).body).records.length,1);
+ const exported=await request('/api/admin/finance/export',ownerToken,'POST',{resource:'expenses',filters:filter});assert.equal(exported.status,200);assert.ok(!exported.body.includes('Thread'));
+ assert.equal((await db.query("SELECT count(*) FROM audit_log WHERE action='expense.deleted'")).rows[0].count,1);
+});
+test('expense corrections roll back when audit cannot be written',async()=>{
+ const initial=await createExpense(db,owner.id,expense);
+ await assert.rejects(()=>require('../server/dashboard').correctExpense(db,'00000000-0000-0000-0000-000000000000',{...expense,id:initial.id,version:1,amount:999,reason:'Correction'},null));
+ assert.equal((await db.query('SELECT amount,version FROM expenses')).rows[0].amount,125);
+});
+test('existing customer and catalog references are reused with immutable item snapshots',async()=>{
+ const first=await createSale(db,owner.id,manual);const id=first.customer_id;
+ await createSale(db,owner.id,{...manual,customer_id:id,product_id:'coat-01',product_name_snapshot:'Wool Chore Coat at time of sale',unit_price:14000,unit_cost:null});
+ assert.equal((await db.query('SELECT count(*) FROM customers')).rows[0].count,1);
+ const res=await dashboardQuery('customers');assert.equal(res.status,200,res.body);const customer=JSON.parse(res.body).records[0];assert.equal(customer.order_count,2);assert.equal(customer.revenue,'30100');assert.equal(customer.last_purchase,'2026-09-06');
+ const history=await request('/api/admin/finance/customer-history',ownerToken,'POST',{customer_id:id,filters:filter});assert.equal(history.status,200,history.body);assert.equal(JSON.parse(history.body).orders.records.length,2);assert.equal(JSON.parse(history.body).payments.records.length,2);
+ assert.equal((await request('/api/admin/finance/orders',ownerToken,'POST',{...manual,product_id:'nonexistent'})).status,400);
+ const products=JSON.parse((await request('/api/admin/finance/products',ownerToken)).body).records;assert.equal(products.find(p=>p.id==='coat-01').unit_price,'14500');assert.equal(products[0].unit_cost,null);
+ const stored=(await db.query("SELECT * FROM order_items WHERE product_id='coat-01'")).rows[0];assert.equal(stored.unit_price,14000);assert.equal(stored.product_name_snapshot,'Wool Chore Coat at time of sale');
+});
+test('partial manual payments count only collected amount and are correctly reported',async()=>{
+ const res=await request('/api/admin/finance/orders',ownerToken,'POST',{...manual,payment_status:'partial',paid_amount:1000});assert.equal(res.status,201,res.body);
+ assert.equal((await summary(db,filter)).collected,'1000');assert.equal((await summary(db,filter)).revenue,'2100');
+ const records=JSON.parse((await dashboardQuery('orders',{payment_status:'partial'})).body).records;assert.equal(records.length,1);assert.equal(records[0].payment_status,'partial');
+ assert.equal((await request('/api/admin/finance/orders',ownerToken,'POST',{...manual,payment_status:'partial',paid_amount:2100})).status,400);
+});
+test('day/month reports aggregate refunds, missing costs, expenses and current payment statuses without join inflation',async()=>{
+ await createSale(db,owner.id,{...manual,unit_cost:null});await createExpense(db,owner.id,expense);
+ const payment=(await db.query('SELECT * FROM payments')).rows[0];await db.query("INSERT INTO refunds(payment_id,amount,currency,refund_date) VALUES($1,300,'USD','2026-09-07')",[payment.id]);
+ const res=await dashboardQuery('reports',{from:'2026-09-06',to:'2026-09-08',group:'day'});assert.equal(res.status,200,res.body);const r=JSON.parse(res.body);
+ assert.equal(r.series.length,3);assert.equal(r.series[0].revenue,'2100');assert.equal(r.series[0].expenses,'125');assert.equal(r.series[0].missingCostItems,1);assert.equal(r.series[1].refunds,'300');assert.equal(r.series[1].estimatedProfit,'-300');assert.equal(r.series[2].revenue,'0');
+ assert.equal(r.totals.estimatedProfit,'1675');assert.equal(r.categories[0].amount,'125');assert.equal(r.statuses[0].payment_status,'partially_refunded');
+ const month=JSON.parse((await dashboardQuery('reports',{from:'2026-09-01',to:'2026-09-30',group:'month'})).body);assert.equal(month.series.length,1);assert.equal(month.series[0].estimatedProfit,'1675');
+ await db.query("INSERT INTO refunds(payment_id,amount,currency,refund_date) VALUES($1,1800,'USD','2026-09-07')",[payment.id]);
+ assert.equal(JSON.parse((await dashboardQuery('orders')).body).records[0].payment_status,'refunded');
+});
+test('all new private APIs and CSV exports enforce owner auth and no-store',async()=>{
+ for(const [path,method,body] of [
+ ['products','GET'],['customers','GET'],['query','POST',{resource:'orders',filters:filter}],['customer-history','POST',{customer_id:owner.id}],['export','POST',{resource:'orders',filters:filter}],['expenses','PATCH',{}],['expenses','DELETE',{}]
+ ])for(const [token,status]of [[null,401],[otherToken,403]]){const r=await request('/api/admin/finance/'+path,token,method,body);assert.equal(r.status,status,path);assert.match(r.headers['Cache-Control'],/no-store/);}
+});
+test('CSV exports use exact currency values, ISO dates, escaped text and formula protection',async()=>{
+ await createSale(db,owner.id,{...manual,customer:'=HYPERLINK("evil")',product_name_snapshot:'A "quoted", coat'});await createExpense(db,owner.id,expense);
+ for(const kind of ['orders','payments','expenses']){const r=await request('/api/admin/finance/export',ownerToken,'POST',{resource:kind,filters:filter});assert.equal(r.status,200,r.body);assert.match(r.headers['Content-Type'],/text\/csv/);assert.match(r.headers['Cache-Control'],/no-store/);assert.match(r.body,/2026-09-06/);assert.match(r.body,/"USD"/);}
+ const csv=(await request('/api/admin/finance/export',ownerToken,'POST',{resource:'orders',filters:filter})).body;assert.match(csv,/"21\.00"/);assert.ok(csv.includes("'=HYPERLINK"));assert.ok(csv.includes('A ""quoted"", coat'));
+ const {decimal,cell}=require('../server/csv');assert.equal(decimal('1250','KWD'),'1.250');assert.equal(decimal('1250','JPY'),'1250');assert.equal(decimal('-5','USD'),'-0.05');assert.ok(cell('\t=1+1').startsWith('"\''));
+ assert.equal((await request('/api/admin/finance/export',ownerToken,'POST',{resource:'orders',filters:filter},{'x-csrf-token':''})).status,403);
+});
+test('server pagination returns bounded listings with next-page indication',async()=>{
+ await db.query("INSERT INTO expenses(category,description,amount,currency,expense_date) SELECT 'Test','Expense ' || n,100,'USD','2026-09-06'::date FROM generate_series(1,51) n");
+ const first=JSON.parse((await dashboardQuery('expenses')).body);assert.equal(first.records.length,50);assert.equal(first.hasMore,true);
+ const second=JSON.parse((await dashboardQuery('expenses',{offset:50})).body);assert.equal(second.records.length,1);assert.equal(second.hasMore,false);
+});
+test('payments settle unpaid and partial orders, enforce balance and idempotency',async()=>{
+ const created=await createSale(db,owner.id,{...manual,payment_status:'unpaid'}); const key=require('node:crypto').randomUUID();
+ let r=await request('/api/admin/finance/payments',ownerToken,'POST',{order_id:created.id,amount:1000,method:'cash',payment_date:'2026-09-07',notes:'deposit'},{'idempotency-key':key});assert.equal(r.status,201,r.body);assert.equal((await summary(db,{...filter,from:'2026-09-07',to:'2026-09-07'})).collected,'1000');
+ assert.equal((await request('/api/admin/finance/payments',ownerToken,'POST',{order_id:created.id,amount:1101,method:'cash',payment_date:'2026-09-07'},{'idempotency-key':require('node:crypto').randomUUID()})).status,400);
+ r=await request('/api/admin/finance/payments',ownerToken,'POST',{order_id:created.id,amount:1100,method:'card',payment_date:'2026-09-08'},{'idempotency-key':require('node:crypto').randomUUID()});assert.equal(r.status,201);assert.equal((await db.query('SELECT status FROM orders WHERE id=$1',[created.id])).rows[0].status,'paid');
+ assert.equal((await request('/api/admin/finance/payments',ownerToken,'POST',{order_id:created.id,amount:100,method:'cash',payment_date:'2026-09-08'},{'idempotency-key':require('node:crypto').randomUUID()})).status,400);
+ assert.equal((await request('/api/admin/finance/order-detail',ownerToken,'POST',{order_id:created.id})).status,200);
+});
+test('manual refunds are bounded, idempotent and reduce net collected',async()=>{
+ const order=await createSale(db,owner.id,manual);const payment=(await db.query('SELECT * FROM payments')).rows[0];const key=require('node:crypto').randomUUID();
+ const refundBody={payment_id:payment.id,amount:500,reason:'Customer return',notes:'partial'};let r=await request('/api/admin/finance/refunds',ownerToken,'POST',refundBody,{'idempotency-key':key});assert.equal(r.status,201,r.body);assert.equal((await request('/api/admin/finance/refunds',ownerToken,'POST',refundBody,{'idempotency-key':key})).status,201);assert.equal((await db.query('SELECT count(*) FROM refunds')).rows[0].count,1);
+ assert.equal((await request('/api/admin/finance/refunds',ownerToken,'POST',{payment_id:payment.id,amount:1700,reason:'Too much'},{'idempotency-key':require('node:crypto').randomUUID()})).status,400);
+ const d=JSON.parse((await request('/api/admin/finance/order-detail',ownerToken,'POST',{order_id:order.id})).body);assert.equal(d.net_collected,'1600');
+});
+test('product cost defaults into new sales while preserving historical snapshots',async()=>{
+ const productId='coat-01';assert.equal((await request('/api/admin/finance/product-costs',ownerToken,'POST',{product_id:productId,unit_cost:321,currency:'USD'},{'idempotency-key':require('node:crypto').randomUUID()})).status,200);
+ const sale=await createSale(db,owner.id,{...manual,product_id:productId,product_name_snapshot:'Coat',unit_price:14000,unit_cost:null});assert.equal((await db.query('SELECT unit_cost FROM order_items WHERE order_id=$1',[sale.id])).rows[0].unit_cost,321);
+ assert.equal((await request('/api/admin/finance/products',ownerToken)).body.includes('321'),true);assert.equal((await db.query("SELECT action FROM audit_log WHERE action='product_cost.changed'")).rows.length,1);
+});
+test('refund export is owner-only and contains stable IDs',async()=>{const sale=await createSale(db,owner.id,manual);const p=(await db.query('SELECT * FROM payments')).rows[0];await db.query("INSERT INTO refunds(payment_id,amount,currency,refund_date,reason) VALUES($1,10,'USD','2026-09-06','test')",[p.id]);const r=await request('/api/admin/finance/export',ownerToken,'POST',{resource:'refunds',filters:filter});assert.equal(r.status,200);assert.match(r.body,/Refund ID/);assert.match(r.body,new RegExp(p.id));assert.equal((await request('/api/admin/finance/export',otherToken,'POST',{resource:'refunds',filters:filter})).status,403);});
+test('concurrent settlement requests cannot overpay an order',async()=>{const order=await createSale(db,owner.id,{...manual,payment_status:'unpaid'});const bodies=[{order_id:order.id,amount:2100,method:'cash',payment_date:'2026-09-06'},{order_id:order.id,amount:2100,method:'cash',payment_date:'2026-09-06'}];const results=await Promise.allSettled(bodies.map((body)=>require('../server/finance').recordPayment(db,owner.id,body,require('node:crypto').randomUUID())));assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal((await db.query('SELECT sum(amount)::text amount FROM payments WHERE order_id=$1',[order.id])).rows[0].amount,'2100');});
+test('concurrent refund requests cannot exceed a payment',async()=>{const order=await createSale(db,owner.id,manual);const p=(await db.query('SELECT * FROM payments WHERE order_id=$1',[order.id])).rows[0];const bodies=[{payment_id:p.id,amount:2100,reason:'return'},{payment_id:p.id,amount:2100,reason:'return'}];const results=await Promise.allSettled(bodies.map((body)=>require('../server/finance').createRefund(db,owner.id,body,require('node:crypto').randomUUID())));assert.equal(results.filter(r=>r.status==='fulfilled').length,1);assert.equal((await db.query('SELECT sum(amount)::text amount FROM refunds WHERE payment_id=$1',[p.id])).rows[0].amount,'2100');});

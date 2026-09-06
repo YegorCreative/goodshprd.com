@@ -18,8 +18,8 @@ async function dispatch(req,isWebhook,dependencies = {}) {
  try {
   const url = new URL(req.url,'https://finance.invalid');
   const route = url.searchParams.get('finance_route');
-  if (route && /^\/api\/(auth\/[a-z]+|admin\/finance\/[a-z]+)$/.test(route)) { url.searchParams.delete('finance_route'); req.url = route + url.search; }
-  return isWebhook ? await webhook(req,dependencies) : await createApp(dependencies.db || database())(req);
+  if (route && /^\/api\/(auth\/[a-z]+|admin\/finance\/[a-z-]+)$/.test(route)) { url.searchParams.delete('finance_route'); req.url = route + url.search; }
+  return isWebhook ? await webhook(req,dependencies) : await createApp(dependencies.db || database(),dependencies)(req);
  }
  catch { return response(503,{error:'Service not configured'}); }
 }

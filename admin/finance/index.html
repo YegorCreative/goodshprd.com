@@ -1,30 +1,51 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="csrf-token" content="{{CSRF_TOKEN}}">
-<title>Finance · Good Shepherd</title>
-<link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/admin.css">
-<script src="/js/admin/finance.js" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="csrf-token" content="{{CSRF_TOKEN}}">
+<title>Finance · Good Shepherd</title><link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/admin.css"><script src="/js/admin/finance-dates.js" defer></script><script src="/js/admin/finance.js" defer></script>
 </head>
 <body class="finance">
-<header><div><a href="/">Good Shepherd</a><h1>Finance</h1><p>Private owner workspace</p></div><nav aria-label="Admin"><a href="/admin/">Product admin</a><button id="logout" type="button">Sign out</button></nav></header>
-<main>
-<form id="filters" class="filter-bar"><label>Currency<select name="currency" id="currency"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>JPY</option><option>KWD</option></select></label><label>From<input type="date" name="from" required></label><label>Through<input type="date" name="to" required></label><button type="submit">Apply dates</button></form>
-<p id="status" role="status" aria-live="polite">Loading finance records…</p>
-<section class="cards" aria-label="Financial overview">
-<article><h2>Revenue</h2><strong id="revenue">—</strong></article>
-<article><h2>Payments collected</h2><strong id="collected">—</strong></article>
-<article><h2>Refunds</h2><strong id="refunds">—</strong></article>
-<article><h2>Expenses</h2><strong id="expenses">—</strong></article>
-<article><h2>Estimated profit</h2><strong id="estimatedProfit">—</strong></article>
+<a class="skip-link" href="#workspace">Skip to dashboard</a>
+<header class="finance-header"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">gs</span><span>Good Shepherd<small>Finance · Owner workspace</small></span></a>
+<nav aria-label="Finance navigation"><a href="#overview" data-view="overview" aria-current="page">Overview</a><a href="#sales" data-view="sales">Sales</a><a href="#expenses" data-view="expenses">Expenses</a><a href="#customers" data-view="customers">Customers</a><a href="#reports" data-view="reports">Reports</a></nav><button id="logout" type="button" class="quiet">Logout</button></header>
+<main id="workspace" tabindex="-1">
+<div class="page-heading"><div><p class="eyebrow">THE BUSINESS BEHIND THE CRAFT</p><h1 id="view-title">Financial overview</h1><p id="view-description">A clear view of what comes in, what goes out, and what remains.</p></div><a class="product-link" href="/admin/">Product admin ↗</a></div>
+<form id="filters" class="period-bar"><label>Period<select id="preset" name="preset"><option value="today">Today</option><option value="week">This Week</option><option value="month" selected>This Month</option><option value="last-month">Last Month</option><option value="year">This Year</option><option value="custom">Custom Range</option></select></label><label>From<input type="date" name="from" required></label><label>Through<input type="date" name="to" required></label><label>Currency<select name="currency" id="currency"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>JPY</option><option>KWD</option></select></label><button type="submit">Update view</button></form>
+<div class="status-line"><p id="status" role="status" aria-live="polite">Loading your dashboard…</p><button id="retry" class="quiet" type="button" hidden>Try again</button></div>
+<div id="view-content">
+<section id="view-overview" class="view" aria-label="Overview">
+<div class="section-heading"><h2>This period</h2><button type="button" data-new-sale>+ New Sale</button></div>
+<div class="cards" aria-label="Financial overview"><article class="metric "><h3>Revenue</h3><strong id="revenue">—</strong><small class="card-period"></small><p id="compare-revenue" class="comparison"></p></article>
+<article class="metric "><h3>Collected</h3><strong id="collected">—</strong><small class="card-period"></small><p id="compare-collected" class="comparison"></p></article>
+<article class="metric "><h3>Outstanding</h3><strong id="outstanding">—</strong><small class="card-period"></small><p id="compare-outstanding" class="comparison"></p></article>
+<article class="metric "><h3>Refunds</h3><strong id="refunds">—</strong><small class="card-period"></small><p id="compare-refunds" class="comparison"></p></article>
+<article class="metric "><h3>Expenses</h3><strong id="expenses">—</strong><small class="card-period"></small><p id="compare-expenses" class="comparison"></p></article>
+<article class="metric "><h3>Cost of Goods</h3><strong id="costOfGoodsSold">—</strong><small class="card-period"></small><p id="compare-costOfGoodsSold" class="comparison"></p></article>
+<article class="metric profit-metric"><h3>Estimated Profit</h3><strong id="estimatedProfit">—</strong><small class="card-period"></small><p id="compare-estimatedProfit" class="comparison"></p></article>
+</div><p id="cost-warning" class="notice"></p>
+<div class="charts"><article class="panel"><h2>Revenue over time</h2><div id="chart-revenue" class="chart"></div></article><article class="panel"><h2>Expenses over time</h2><div id="chart-expenses" class="chart"></div></article><article class="panel"><h2>Estimated profit over time</h2><div id="chart-profit" class="chart"></div></article></div>
+<details class="methodology"><summary>Understand these figures</summary><p>Revenue includes completed and paid sales before refunds. Collected includes successful payments only. Estimated profit = Revenue − Refunds − known Cost of Goods − Expenses. Unknown costs are flagged, and processing fees must be entered as expenses. Order totals include any tax and shipping. Sales, payments, refunds, and expenses each use their own dates. Each currency is reported separately.</p><p>Comparisons use the preceding period with the same number of days. Percentage changes are omitted when the previous value is zero or negative. Chart data is aggregated on the server; longer overview ranges use monthly buckets.</p></details>
 </section>
-<p id="cost-warning" class="notice"></p>
-<details><summary>How these totals work</summary><p>Revenue counts completed and paid sales before refunds, including tax and shipping in the order total. Collected counts successful payments. Gross profit is revenue minus recorded item costs and refunds. Estimated profit subtracts expenses as well. Missing costs make profit incomplete. Payment processing fees are included only when entered as expenses. Sales use their sale date; payments, refunds and expenses use their own dates. Currencies are never combined.</p></details>
-<section><h2>Recent sales</h2><p>Up to 100 sales in the selected period.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Customer</th><th>Item</th><th>Total</th><th>Payment status</th><th>Source</th></tr></thead><tbody id="sales"></tbody></table></div></section>
-<section><h2>Recent expenses</h2><p>Up to 100 expenses in the selected period.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody id="expense-rows"></tbody></table></div></section>
-<div class="forms">
-<section><h2>Add manual sale</h2><form id="sale-form">
+<section id="view-sales" class="view" aria-label="Sales" hidden>
+<div class="section-heading"><h2>Sales ledger</h2><div class="actions"><button class="quiet" type="button" data-export="orders">Export sales CSV</button><button type="button" data-new-sale>+ New Sale</button></div></div>
+<form id="sales-filters" class="table-filters"><label>Payment status<select name="payment_status"><option value="all">All statuses</option><option value="paid">Paid</option><option value="pending">Pending / unpaid</option><option value="partial">Partially paid</option><option value="refunded">Refunded</option><option value="partially_refunded">Partially refunded</option></select></label><label>Source<select name="source"><option value="all">All sources</option><option value="manual">Manual</option><option value="stripe">Stripe</option></select></label><label>Customer<input name="customer" type="search" maxlength="200" placeholder="Search customer name"></label><label>Sort<select name="sort"><option value="date_desc">Newest first</option><option value="date_asc">Oldest first</option><option value="amount_desc">Highest amount</option><option value="amount_asc">Lowest amount</option></select></label><button class="quiet" type="submit">Filter sales</button></form>
+<p class="hint">Sale price and known cost are totals across all quantities. Missing costs are never treated as known zero costs.</p>
+<details class="panel product-cost-panel"><summary><strong>Maintain product cost basis</strong></summary><p class="hint">Costs are private finance data and are used as defaults for future sales. Historical snapshots never change.</p><div id="product-cost-rows"></div></details>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Sales ledger"><table><thead><tr><th>Date</th><th>Customer</th><th>Item</th><th>Quantity</th><th>Sale price</th><th>Cost</th><th>Payment status</th><th>Source</th><th>Order ID</th><th>Manage</th></tr></thead><tbody id="sales"></tbody></table></div><div class="pagination" data-pager="sales"></div>
+</section>
+<section id="view-expenses" class="view" aria-label="Expenses" hidden>
+<div class="section-heading"><h2>Expense ledger</h2><div class="actions"><button class="quiet" type="button" data-export="expenses">Export expenses CSV</button><button type="button" data-new-expense>+ Add Expense</button></div></div>
+<form id="expense-filters" class="table-filters"><label>Category<input name="category" maxlength="100" placeholder="Exact category, or leave blank"></label><label>Records<select name="archived"><option value="false">Active expenses</option><option value="true">Deleted · retained for audit</option></select></label><button class="quiet" type="submit">Filter expenses</button></form>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Expense ledger"><table><thead><tr><th scope="col">Date</th><th scope="col">Category</th><th scope="col">Description</th><th scope="col">Vendor</th><th scope="col">Amount</th><th scope="col">Payment method</th><th scope="col">Notes</th><th scope="col">Actions</th></tr></thead><tbody id="expense-rows"></tbody></table></div><div class="pagination" data-pager="expenses"></div>
+</section>
+<section id="view-customers" class="view" aria-label="Customers" hidden><div class="section-heading"><h2>Customer relationships</h2></div><form id="customer-filters" class="table-filters"><label>Find a customer<input type="search" name="customer" maxlength="200" placeholder="Name or email"></label><button type="submit" class="quiet">Search customers</button></form><p class="hint">Orders, revenue and last purchase reflect the selected dates and currency. Choose a customer to see sales and payments.</p><div class="table-wrap" tabindex="0" role="region" aria-label="Customers"><table><thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Orders</th><th scope="col">Revenue</th><th scope="col">Last purchase</th></tr></thead><tbody id="customer-rows"></tbody></table></div><div class="pagination" data-pager="customers"></div></section>
+<section id="view-reports" class="view" aria-label="Reports" hidden><div class="section-heading"><h2>Business reports</h2><label>Revenue grouping<select id="report-group"><option value="day">By day</option><option value="month">By month</option></select></label></div><p id="report-warning" class="notice"></p><div class="report-grid"><article class="panel"><h2>Profit breakdown</h2><dl id="profit-breakdown" class="breakdown"></dl></article><article class="panel"><h2>Payment status</h2><div id="payment-statuses"></div></article></div><div class="report-grid"><article class="panel"><h2>Revenue report</h2><div class="table-wrap report-scroll" tabindex="0" role="region" aria-label="Revenue report"><table><thead><tr><th scope="col">Period</th><th scope="col">Revenue</th><th scope="col">Expenses</th><th scope="col">Estimated profit</th></tr></thead><tbody id="revenue-report"></tbody></table></div></article><article class="panel"><h2>Expenses by category</h2><div class="table-wrap"><table><thead><tr><th scope="col">Category</th><th scope="col">Amount</th></tr></thead><tbody id="category-report"></tbody></table></div></article></div><div class="section-heading"><h2>Payment ledger</h2><button class="quiet" type="button" data-export="payments">Export payments CSV</button></div><div class="table-wrap" tabindex="0" role="region" aria-label="Payments"><table><thead><tr><th scope="col">Date</th><th scope="col">Customer</th><th scope="col">Amount</th><th scope="col">Method</th><th scope="col">Status</th><th scope="col">Order ID</th></tr></thead><tbody id="payment-rows"></tbody></table></div><div class="pagination" data-pager="reports"></div></section>
+</div>
+<footer class="finance-footer"><span>Good Shepherd · Private financial records</span><span>All amounts in the selected currency. Profit is an estimate.</span></footer>
+</main>
+<dialog id="sale-dialog" aria-labelledby="sale-title"><div class="dialog-heading"><div><p class="eyebrow">SALES</p><h2 id="sale-title">Add manual sale</h2></div><button type="button" data-close="sale-dialog" class="quiet" aria-label="Close sale form">Close</button></div><form id="sale-form" class="editor-form">
+<label>Find existing customer<input id="sale-customer-search" type="search" placeholder="Search by name or email" maxlength="200"></label><div id="customer-options" class="choice-list" aria-live="polite"></div><p id="selected-customer" class="hint">Or enter a new customer below.</p><button type="button" id="clear-customer" class="quiet">Clear customer selection</button>
+<label>Catalog product<select name="product_id" id="sale-product"><option value="">Custom item</option></select></label><p id="product-hint" class="hint">Catalog prices are suggestions. Historical sale values are recorded exactly as entered.</p>
 <label>Customer (optional)<input name="customer" maxlength="200"></label>
 <label>Product / item<input name="product_name_snapshot" maxlength="200" required></label>
 <label>Sale price per item<input name="unit_price" inputmode="decimal" placeholder="0.00" required></label>
@@ -32,12 +53,13 @@
 <label>Quantity<input name="quantity" type="number" min="1" max="10000" value="1" required></label>
 <label>Currency<select name="currency"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>JPY</option><option>KWD</option></select></label>
 <label>Sale date<input name="sale_date" type="date" required></label>
-<label>Payment status<select name="payment_status"><option value="paid">Paid</option><option value="unpaid">Unpaid</option></select></label>
+<label>Payment status<select name="payment_status"><option value="paid">Paid</option><option value="unpaid">Unpaid</option><option value="partial">Partially paid</option></select></label>
+<label id="partial-field" hidden>Amount collected<input name="paid_amount" inputmode="decimal" placeholder="0.00"></label>
 <label>Payment method<input name="payment_method" placeholder="Cash, card, bank transfer…" maxlength="80" required></label>
 <label>Notes<textarea name="notes" maxlength="4000"></textarea></label>
-<button type="submit">Save sale</button><p class="form-message" role="status"></p>
-</form></section>
-<section><h2>Add expense</h2><form id="expense-form">
+<button type="submit">Create sale</button><p class="form-message" role="status"></p>
+</form></dialog>
+<dialog id="expense-dialog" aria-labelledby="expense-title"><div class="dialog-heading"><div><p class="eyebrow">EXPENSES</p><h2 id="expense-title">Add expense</h2></div><button type="button" data-close="expense-dialog" class="quiet" aria-label="Close expense form">Close</button></div><form id="expense-form" class="editor-form">
 <label>Category<input name="category" maxlength="100" placeholder="Supplies, processing fees…" required></label>
 <label>Description<input name="description" maxlength="500" required></label>
 <label>Vendor (optional)<input name="vendor" maxlength="200"></label>
@@ -46,7 +68,12 @@
 <label>Expense date<input name="expense_date" type="date" required></label>
 <label>Payment method<input name="payment_method" maxlength="80"></label>
 <label>Notes<textarea name="notes" maxlength="4000"></textarea></label>
+<label id="correction-field" hidden>Reason for correction<textarea name="reason" maxlength="1000"></textarea></label>
 <button type="submit">Save expense</button><p class="form-message" role="status"></p>
-</form></section>
-</div>
-</main></body></html>
+</form></dialog>
+<dialog id="delete-dialog" aria-labelledby="delete-title"><div class="dialog-heading"><h2 id="delete-title">Delete expense?</h2><button type="button" data-close="delete-dialog" class="quiet">Cancel</button></div><p id="delete-description"></p><p>This removes the expense from active totals. The original record and the reason remain in the audit history.</p><form id="delete-form" class="editor-form"><label>Reason<textarea name="reason" maxlength="1000" required></textarea></label><label>Type DELETE to confirm<input name="confirmation" pattern="DELETE" autocomplete="off" required></label><button type="submit" class="danger">Confirm deletion</button><p class="form-message" role="status"></p></form></dialog>
+<dialog id="customer-dialog" class="wide-dialog" aria-labelledby="customer-title"><div class="dialog-heading"><h2 id="customer-title">Customer history</h2><button type="button" data-close="customer-dialog" class="quiet">Close</button></div><p id="customer-details"></p><p id="history-status" role="status"></p><h3>Sales</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Item</th><th>Total</th><th>Status</th></tr></thead><tbody id="history-sales"></tbody></table></div><h3>Payments</h3><div class="table-wrap"><table><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead><tbody id="history-payments"></tbody></table></div><div class="pagination" id="history-pager"></div></dialog>
+<dialog id="order-dialog" class="wide-dialog"><div class="dialog-heading"><h2>Sale details</h2><button type="button" data-close="order-dialog" class="quiet">Close</button></div><div id="order-details" class="order-details"></div><p id="order-status" role="status"></p></dialog>
+<dialog id="payment-dialog" aria-labelledby="payment-title"><div class="dialog-heading"><h2 id="payment-title">Record payment</h2><button type="button" data-close="payment-dialog" class="quiet">Close</button></div><form id="payment-form" class="editor-form"><p id="payment-balance" class="hint"></p><label>Amount<input name="amount" inputmode="decimal" required></label><label>Payment method<input name="method" maxlength="80" required></label><label>Payment date<input name="payment_date" type="date" required></label><label>Notes<textarea name="notes" maxlength="4000"></textarea></label><button type="submit">Record payment</button><p class="form-message" role="status"></p></form></dialog>
+<dialog id="refund-dialog" aria-labelledby="refund-title"><div class="dialog-heading"><h2 id="refund-title">Refund payment</h2><button type="button" data-close="refund-dialog" class="quiet">Close</button></div><form id="refund-form" class="editor-form"><input type="hidden" name="payment_id"><p id="refund-balance" class="hint"></p><label>Amount<input name="amount" inputmode="decimal" required></label><label>Refund date<input name="refund_date" type="date" required></label><label>Reason<input name="reason" maxlength="500" required></label><label>Notes<textarea name="notes" maxlength="4000"></textarea></label><label><input type="checkbox" name="confirm" required> I confirm this refund</label><button type="submit" class="danger">Confirm refund</button><p class="form-message" role="status"></p></form></dialog>
+</body></html>

@@ -11,8 +11,9 @@ This implementation adds an owner-only `/admin/finance/` page and relational fin
 - `server/validation.js`: bounded input, dates, currencies and integer minor units.
 - `server/stripe-events.js`: verified-event reconciliation, provider IDs, transactional deduplication and payment locking.
 - `server/adapters.js`: Vercel/Netlify adapters, raw-body signature verification, no private caching.
-- `admin/finance/index.html`, `css/admin.css`, `js/admin/finance.js`: protected dashboard template and public code/style assets. No financial records or secrets live in those assets.
-- `db/migrations/001_finance.sql`: initial PostgreSQL schema.
+- `admin/finance/index.html`, `css/admin.css`, `js/admin/finance.js`, `js/admin/finance-dates.js`: protected responsive dashboard with Overview, Sales, Expenses, Customers, and Reports views; server-driven filters, comparison cards, SVG trend charts, customer history, CSV exports, correction dialogs, and explicit deletion confirmation. No financial records or secrets live in those assets.
+- `server/dashboard.js`, `server/csv.js`, `server/products.js`: server-side listings, reports, customer summaries/history, audit-preserving expense corrections/deletions, CSV serialization, and reuse of the storefront catalog.
+- `db/migrations/001_finance.sql`, `db/migrations/002_finance_dashboard.sql`: initial schema plus versioned, audit-preserving expense correction/deletion fields and indexes.
 - `scripts/migrate.js`: explicitly invoked, transactionally tracked migrations with an advisory lock.
 - `scripts/build.js`: allowlisted public build. The Finance HTML is **not** copied into `dist`.
 - `api/finance.js`, `api/finance-page.js`, `api/webhook.js`: Vercel adapters.
@@ -60,17 +61,22 @@ Changing repository permissions does not authorize Finance. A signed-in non-owne
 - `GET /api/auth/callback`: single-use OAuth callback.
 - `GET /api/auth/me`: current session CSRF token and owner boolean.
 - `POST /api/auth/logout`: revoke session, requires CSRF and same origin.
-- `GET /api/admin/finance/summary`: totals.
-- `GET /api/admin/finance/reports`: same authoritative period summary in this phase.
-- `GET /api/admin/finance/orders`: up to 100 orders with customer/item/payment status.
-- `POST /api/admin/finance/orders`: manual sale, item, optional new customer, payment if paid, and audit record in one transaction.
-- `GET /api/admin/finance/payments`: up to 100 payment records.
-- `GET /api/admin/finance/expenses`: up to 100 expense records.
+- `GET /api/admin/finance/summary`: period totals and previous-equivalent-period comparisons where a valid baseline exists.
+- `GET /api/admin/finance/reports`: server-aggregated day/month series, category expenses, profit breakdown, and current payment statuses.
+- `GET /api/admin/finance/orders`: filtered/paginated sales ledger.
+- `POST /api/admin/finance/orders`: manual sale, item, optional existing/new customer, payment when appropriate, and audit record in one transaction.
+- `GET /api/admin/finance/payments`: filtered/paginated payment ledger.
+- `GET /api/admin/finance/expenses`: filtered/paginated active or retained deleted expenses.
 - `POST /api/admin/finance/expenses`: expense and audit record in one transaction.
+- `PATCH /api/admin/finance/expenses`: version-checked correction requiring a reason; before/after values are retained in audit metadata.
+- `DELETE /api/admin/finance/expenses`: version-checked soft deletion requiring both a reason and literal `DELETE` confirmation; the row remains queryable as retained audit history.
+- `POST /api/admin/finance/query`: owner-only dashboard query gateway for server-side listings, catalog products, and customer summaries.
+- `POST /api/admin/finance/customer-history`: owner-only customer sales/payment history.
+- `POST /api/admin/finance/export`: owner-only server-generated CSV for `orders`, `expenses`, or `payments` (maximum 10,000 rows).
 
 Every finance endpoint requires the owner session. GET filters: `currency` (default USD), `from` / `to` (YYYY-MM-DD, inclusive; default all dates), `offset` (list endpoints). The dashboard defaults to the current month. Manual entry/report selection initially supports USD, CAD, EUR, GBP, AUD, JPY and KWD. Stripe records retain their actual three-letter currency even outside this UI set; extend the supported UI currency list before accepting other currencies.
 
-POSTs require `Content-Type: application/json`, exact `Origin: APP_ORIGIN`, `X-CSRF-Token` from the authenticated page or `/api/auth/me`, and a UUID v4 `Idempotency-Key`. Retrying the same key/data returns the original record; reusing it with different data returns 409. The browser keeps keys only in memory. If you reload after an ambiguous network error, inspect recent records before resubmitting because a new page gets a new key.
+State-changing requests require `Content-Type: application/json`, exact `Origin: APP_ORIGIN`, `X-CSRF-Token` from the authenticated page or `/api/auth/me`, and a UUID v4 `Idempotency-Key`. Retrying the same key/data returns the original record; reusing it with different data returns 409. Corrections and deletions are version-checked to prevent stale edits. The browser keeps keys only in memory. If you reload after an ambiguous network error, inspect recent records before resubmitting because a new page gets a new key.
 
 Money request values are **integer minor units**, for example USD 10.50 = `1050`, JPY 500 = `500`, KWD 1.250 = `1250`. The browser parses decimal input with integer arithmetic; the server validates all fields again. PostgreSQL bigint values in API records may be strings; summary money values are always decimal integer strings to avoid JSON precision loss.
 
@@ -108,7 +114,7 @@ The frontend success page remains presentation only. It cannot create records or
 
 ## Calculation definition
 
-Each report is scoped to one currency and date range and executes one SQL statement for a consistent snapshot:
+Each report is scoped to one currency and date range and executes server-side SQL against a repeatable-read snapshot. The dashboard requests aggregates and bounded pages; it never downloads the full database:
 
 - Revenue = totals of `completed` / `paid` orders, before refunds.
 - Collected = `succeeded` payment amounts, before refunds.
@@ -121,7 +127,7 @@ Sales use sale dates; collections, refunds and expenses use their respective dat
 
 ## Verification and remaining work
 
-Run `npm test` with Node 22. Tests use an in-memory PostgreSQL engine and the actual migration and SQL, plus mocked GitHub/Stripe network calls. They verify owner/non-owner/logged-out access, page/function paths, expiry, logout, CSRF, raw-body signatures, OAuth state/PKCE/session rotation, transactional sale/expense creation, audit rollback, idempotency, refunds, exact calculations, currencies/dates, missing costs, deployment adapters, and safe public artifacts. They do not prove distributed contention behavior or actual managed PostgreSQL/network/host configuration.
+Run `npm test` with Node 22. The suite currently contains 39 passing tests. Tests use an in-memory PostgreSQL engine and the actual migrations and SQL, plus mocked GitHub/Stripe network calls. They verify owner/non-owner/logged-out access, page/function paths, expiry, logout, CSRF, raw-body signatures, OAuth state/PKCE/session rotation, transactional sale/expense creation, payment settlement, refunds, product costs, audit rollback, idempotency, exact calculations, currencies/dates, missing costs, dashboard filtering, comparisons, corrections, soft deletion, customers, reports, CSV safety, pagination, deployment adapters, and safe public artifacts. They do not prove actual managed PostgreSQL/network/host configuration.
 
 Local Safari checks used fictional records and a temporary fixture server outside the repository. The dashboard rendered expected totals, and an expense form submission persisted and updated totals. Production has no preview-sign-in route or authentication bypass.
 
