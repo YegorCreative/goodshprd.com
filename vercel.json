@@ -4,10 +4,13 @@
   "functions": {
     "api/finance.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60, "runtime": "nodejs22.x"},
     "api/finance-page.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60, "runtime": "nodejs22.x"},
+    "api/admin.js": {"includeFiles": "admin/gateway.html", "maxDuration": 60, "runtime": "nodejs22.x"},
     "api/webhook.js": {"maxDuration": 60, "runtime": "nodejs22.x"},
     "api/create-checkout-session.js": {"maxDuration": 60, "runtime": "nodejs22.x"}
   },
   "rewrites": [
+    {"source": "/admin", "destination": "/api/admin"},
+    {"source": "/admin/", "destination": "/api/admin"},
     {"source": "/admin/finance", "destination": "/api/finance-page"},
     {"source": "/admin/finance/", "destination": "/api/finance-page"},
     {"source": "/admin/finance/index.html", "destination": "/api/finance-page"},

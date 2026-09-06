@@ -12,10 +12,11 @@ function createApp(db, options = {}) {
    const pathname = new URL(req.url,'https://finance.invalid').pathname;
    if (pathname.startsWith('/api/auth/')) return await authRoute(req,db,pathname.slice('/api/auth/'.length));
    // The direct function URLs also reach this code: there is no unguarded HTML handler.
-   if (pathname === '/admin/finance' || pathname === '/admin/finance/' || pathname === '/admin/finance/index.html' || pathname === '/api/finance-page' || pathname === '/.netlify/functions/finance-page') {
+   if (pathname === '/admin' || pathname === '/admin/' || pathname === '/api/admin' || pathname === '/.netlify/functions/admin' || pathname === '/admin/finance' || pathname === '/admin/finance/' || pathname === '/admin/finance/index.html' || pathname === '/api/finance-page' || pathname === '/.netlify/functions/finance-page') {
     const owner = await requireFinanceOwner(req,db);
     if (req.method !== 'GET') throw new HttpError(405,'Method not allowed');
-    const html = (options.page || fs.readFileSync(path.join(process.cwd(),'admin/finance/index.html'),'utf8')).replace('{{CSRF_TOKEN}}',require('./auth').csrfToken(owner));
+    const gateway=pathname==='/admin'||pathname==='/admin/'||pathname==='/api/admin'||pathname==='/.netlify/functions/admin';
+    const html = (options.page || fs.readFileSync(path.join(process.cwd(),gateway?'admin/gateway.html':'admin/finance/index.html'),'utf8')).replace('{{CSRF_TOKEN}}',require('./auth').csrfToken(owner));
     return {status:200,headers:{...headers,'Content-Type':'text/html; charset=utf-8'},body:html};
    }
    const match = /^\/api\/admin\/finance\/(summary|orders|payments|expenses|reports|customers|customer-history|products|product-costs|order-detail|query|export|refunds)$/.exec(pathname);
@@ -68,7 +69,7 @@ function createApp(db, options = {}) {
    const status = error instanceof HttpError ? error.status : 500;
    // Never send database/provider exceptions or financial payloads to the browser/logs.
    const result = response(status,{error:status === 500 ? 'Finance service unavailable' : error.message});
-   if (status === 401 && ['/admin/finance','/admin/finance/','/admin/finance/index.html','/api/finance-page','/.netlify/functions/finance-page'].includes(new URL(req.url,'https://finance.invalid').pathname)) {
+   if (status === 401 && ['/admin','/admin/','/api/admin','/.netlify/functions/admin','/admin/finance','/admin/finance/','/admin/finance/index.html','/api/finance-page','/.netlify/functions/finance-page'].includes(new URL(req.url,'https://finance.invalid').pathname)) {
     result.headers['Content-Type'] = 'text/html; charset=utf-8';
     result.body = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Finance sign in</title><h1>Good Shepherd Finance</h1><p>Owner sign-in required.</p><a href="/api/auth/login">Sign in with GitHub</a></html>';
    }

@@ -11,6 +11,18 @@ node_bundler = "esbuild"
 included_files = ["admin/finance/index.html"]
 
 [[redirects]]
+from = "/admin"
+to = "/.netlify/functions/admin"
+status = 200
+force = true
+
+[[redirects]]
+from = "/admin/"
+to = "/.netlify/functions/admin"
+status = 200
+force = true
+
+[[redirects]]
 from = "/admin/finance"
 to = "/.netlify/functions/finance-page"
 status = 200

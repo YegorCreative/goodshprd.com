@@ -36,6 +36,9 @@ test('page and direct function paths require owner session',async()=>{
   const r=await request(path,ownerToken);assert.equal(r.status,200);assert.match(r.body,/Add manual sale/);assert.ok(!r.body.includes('{{CSRF_TOKEN}}'));
  }
 });
+test('owner admin gateway is protected and links Finance and CMS',async()=>{
+ assert.equal((await request('/admin/',null)).status,401);assert.equal((await request('/admin/',otherToken)).status,403);const r=await request('/admin/',ownerToken);assert.equal(r.status,200);assert.match(r.body,/Good Shepherd Admin/);assert.match(r.body,/\/admin\/finance\//);assert.match(r.body,/\/admin\/cms\//);assert.match(r.body,/Bookmark/);
+});
 test('expired and tampered sessions are rejected; owner allowlist changes take effect',async()=>{
  await db.query('UPDATE sessions SET expires_at=now()-interval \'1 second\' WHERE user_id=$1',[owner.id]);assert.equal((await request('/api/admin/finance/summary',ownerToken)).status,401);
  assert.equal((await request('/api/admin/finance/summary','c'.repeat(43))).status,401);

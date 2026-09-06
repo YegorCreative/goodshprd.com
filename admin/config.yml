@@ -9,7 +9,7 @@ backend:
   name: github
   repo: yegorhambaryan/goodshprd.com
   branch: main
-  base_path: /admin
+  base_path: /admin/cms
   squash_merges: true
   commit_messages:
     create: 'Add product: {{slug}}'

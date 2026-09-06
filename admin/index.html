@@ -19,7 +19,7 @@
       // Store in localStorage for Decap CMS
       localStorage.setItem('github_access_token', token);
       // Redirect to admin without hash
-      window.location.href = '/goodshprd.com/admin';
+      window.location.href = '/admin/cms';
     }
   </script>
 
@@ -50,7 +50,7 @@
       auth: {
         login: async (username, password, authEndpoint) => {
           const clientId = 'Ov23lioAIWKNVaL5uH8T'; // GitHub OAuth App Client ID
-          const redirectUri = window.location.origin + '/goodshprd.com/admin';
+          const redirectUri = window.location.origin + '/admin/cms';
           const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=repo`;
           window.location.href = authUrl;
         },
