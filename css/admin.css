@@ -1,0 +1,26 @@
+.finance { max-width: 1440px; margin: auto; padding: 2rem; }
+.finance header { display:flex; justify-content:space-between; align-items:center; gap:2rem; margin-bottom:2rem; }
+.finance nav { display:flex; align-items:center; gap:1.5rem; }
+.finance h1 { margin:.5rem 0; }
+.finance h2 { font-size:1.25rem; }
+.finance section { margin:2rem 0; }
+.finance .cards { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; }
+.finance article,.finance .forms section { background:#fff; border:1px solid #d8d1c5; padding:1.5rem; border-radius:8px; }
+.finance article h2 { font-family:inherit; font-size:.9rem; }
+.finance article strong { font-size:1.4rem; overflow-wrap:anywhere; }
+.finance label { display:grid; gap:.35rem; font-size:.95rem; }
+.finance input,.finance select,.finance textarea { width:100%; padding:.7rem; border:1px solid #9a9386; border-radius:4px; background:#fff; color:#1f1f1d; font:inherit; }
+.finance form { display:grid; gap:1rem; }
+.finance .filter-bar { display:flex; flex-wrap:wrap; align-items:end; }
+.finance button { background:#3f4a35; color:#fff; border:0; padding:.8rem 1.2rem; border-radius:4px; font:inherit; cursor:pointer; }
+.finance button:disabled { opacity:.6; cursor:wait; }
+.finance :focus-visible { outline:3px solid #8c662b; outline-offset:3px; }
+.finance .forms { display:grid; grid-template-columns:1fr 1fr; gap:2rem; }
+.finance .table-wrap { overflow:auto; }
+.finance table { border-collapse:collapse; width:100%; text-align:left; }
+.finance th,.finance td { padding:.8rem; border-bottom:1px solid #d8d1c5; vertical-align:top; }
+.finance th { font-weight:600; white-space:nowrap; }
+.finance .notice:not(:empty) { padding:1rem; background:#f3e8cc; }
+.finance #status,.finance .form-message { min-height:1.5rem; }
+@media(max-width:950px) { .finance .cards { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:600px) { .finance { padding:1rem; } .finance header { align-items:start; flex-direction:column; } .finance .forms { grid-template-columns:1fr; gap:0; } .finance article { padding:1rem; } }

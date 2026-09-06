@@ -1,47 +1,46 @@
 [build]
 command = "npm run build"
 functions = "netlify/functions"
-publish = "."
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "22"
 
 [functions]
 node_bundler = "esbuild"
+included_files = ["admin/finance/index.html"]
 
-[[env.production]]
-context = "production"
+[[redirects]]
+from = "/admin/finance"
+to = "/.netlify/functions/finance-page"
+status = 200
+force = true
 
-  [env.production.environment]
-  STRIPE_SECRET_KEY = ""
-  STRIPE_WEBHOOK_SECRET = ""
+[[redirects]]
+from = "/admin/finance/*"
+to = "/.netlify/functions/finance-page"
+status = 200
+force = true
 
-[[env.deploy-preview]]
-context = "deploy-preview"
+[[redirects]]
+from = "/api/auth/:action"
+to = "/.netlify/functions/finance?finance_route=/api/auth/:action"
+status = 200
+force = true
 
-  [env.deploy-preview.environment]
-  STRIPE_SECRET_KEY = ""
-  STRIPE_WEBHOOK_SECRET = ""
+[[redirects]]
+from = "/api/admin/finance/:resource"
+to = "/.netlify/functions/finance?finance_route=/api/admin/finance/:resource"
+status = 200
+force = true
 
-# Redirect API requests
 [[redirects]]
 from = "/api/*"
 to = "/.netlify/functions/:splat"
 status = 200
 
-# CORS headers for API requests (if needed)
-[[headers]]
-for = "/api/*"
-[headers.values]
-  Content-Type = "application/json"
-
-# Cache control for static assets
-[[headers]]
-for = "/images/*"
-[headers.values]
-  Cache-Control = "public, max-age=31536000"
-
-# Admin interface headers
 [[headers]]
 for = "/admin/*"
 [headers.values]
-  X-Frame-Options = "SAMEORIGIN"
-  Cache-Control = "no-cache, no-store, must-revalidate"
-  Content-Type = "text/html"
+X-Frame-Options = "SAMEORIGIN"
+Cache-Control = "no-cache, no-store, must-revalidate"

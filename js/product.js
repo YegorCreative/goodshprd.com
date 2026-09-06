@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
 
@@ -198,21 +199,21 @@ document.addEventListener('DOMContentLoaded', () => {
             // Image handling
             let imageHtml = '';
             if (p.image) {
-                imageHtml = `<img src="${p.image}" alt="${p.name}" class="lazy-image loaded" loading="lazy">`;
+                imageHtml = `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="lazy-image loaded" loading="lazy">`;
             }
 
             return `
             <article class="product-card">
-                <a href="product.html?id=${p.id}" class="product-card-link" aria-label="View details for ${p.name}">
+                <a href="product.html?id=${encodeURIComponent(p.id)}" class="product-card-link" aria-label="View details for ${escapeHtml(p.name)}">
                     <div class="product-image">
                         ${!p.available ? '<div class="product-badges"><span class="product-badge badge-sold">Sold</span></div>' : ''}
                         <div class="placeholder-image"></div>
                         ${imageHtml}
                     </div>
                     <div class="product-info">
-                        <h4 class="product-name">${p.name}</h4>
-                        <p class="product-description">${p.era} | ${p.size}</p>
-                        <p class="product-price">${priceStr}</p>
+                        <h4 class="product-name">${escapeHtml(p.name)}</h4>
+                        <p class="product-description">${escapeHtml(p.era)} | ${escapeHtml(p.size)}</p>
+                        <p class="product-price">${escapeHtml(priceStr)}</p>
                     </div>
                 </a>
             </article>

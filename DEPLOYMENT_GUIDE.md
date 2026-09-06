@@ -1,3 +1,7 @@
+# Finance deployment update
+
+For the new owner-only Finance section, follow [FINANCE_SETUP.md](FINANCE_SETUP.md). The site now builds an allowlisted `dist` directory and requires Netlify or Vercel for Finance. The legacy instructions below describe product CMS setup and do not establish Finance authentication. GitHub Pages deployment now requires explicit repository opt-in.
+
 # Decap CMS Admin - Deployment & Configuration Guide
 
 This guide covers everything needed to deploy and configure the Decap CMS admin interface for the Good Shepherd website.

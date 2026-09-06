@@ -4,6 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const grid = document.getElementById('products-grid');
   const errorContainer = document.getElementById('products-error');
   const resultsCount = document.getElementById('resultsCount');
@@ -138,16 +139,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       return `
                 <article class="product-card">
-                    <a href="product.html?id=${product.id}" class="product-card-link" aria-label="View details for ${product.name}">
+                    <a href="product.html?id=${encodeURIComponent(product.id)}" class="product-card-link" aria-label="View details for ${escapeHtml(product.name)}">
                         <div class="product-image">
                             ${badgeContainer}
                             <div class="placeholder-image"></div>
-                            ${product.image ? `<img data-src="${product.image}" alt="${product.name}" class="lazy-image">` : ''}
+                            ${product.image ? `<img data-src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" class="lazy-image">` : ''}
                         </div>
                         <div class="product-info">
-                            <h3 class="product-name">${product.name}</h3>
-                            <p class="product-description">${product.era} | ${product.condition} | ${product.size}</p>
-                            <p class="product-price">$${product.price}</p>
+                            <h3 class="product-name">${escapeHtml(product.name)}</h3>
+                            <p class="product-description">${escapeHtml(product.era)} | ${escapeHtml(product.condition)} | ${escapeHtml(product.size)}</p>
+                            <p class="product-price">$${escapeHtml(product.price)}</p>
                             <span class="button button-secondary product-button" ${!product.available ? 'style="opacity: 0.5;"' : ''}>${buttonText}</span>
                         </div>
                     </a>

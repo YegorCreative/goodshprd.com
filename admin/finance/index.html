@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{CSRF_TOKEN}}">
+<title>Finance · Good Shepherd</title>
+<link rel="stylesheet" href="/css/styles.css"><link rel="stylesheet" href="/css/admin.css">
+<script src="/js/admin/finance.js" defer></script>
+</head>
+<body class="finance">
+<header><div><a href="/">Good Shepherd</a><h1>Finance</h1><p>Private owner workspace</p></div><nav aria-label="Admin"><a href="/admin/">Product admin</a><button id="logout" type="button">Sign out</button></nav></header>
+<main>
+<form id="filters" class="filter-bar"><label>Currency<select name="currency" id="currency"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>JPY</option><option>KWD</option></select></label><label>From<input type="date" name="from" required></label><label>Through<input type="date" name="to" required></label><button type="submit">Apply dates</button></form>
+<p id="status" role="status" aria-live="polite">Loading finance records…</p>
+<section class="cards" aria-label="Financial overview">
+<article><h2>Revenue</h2><strong id="revenue">—</strong></article>
+<article><h2>Payments collected</h2><strong id="collected">—</strong></article>
+<article><h2>Refunds</h2><strong id="refunds">—</strong></article>
+<article><h2>Expenses</h2><strong id="expenses">—</strong></article>
+<article><h2>Estimated profit</h2><strong id="estimatedProfit">—</strong></article>
+</section>
+<p id="cost-warning" class="notice"></p>
+<details><summary>How these totals work</summary><p>Revenue counts completed and paid sales before refunds, including tax and shipping in the order total. Collected counts successful payments. Gross profit is revenue minus recorded item costs and refunds. Estimated profit subtracts expenses as well. Missing costs make profit incomplete. Payment processing fees are included only when entered as expenses. Sales use their sale date; payments, refunds and expenses use their own dates. Currencies are never combined.</p></details>
+<section><h2>Recent sales</h2><p>Up to 100 sales in the selected period.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Customer</th><th>Item</th><th>Total</th><th>Payment status</th><th>Source</th></tr></thead><tbody id="sales"></tbody></table></div></section>
+<section><h2>Recent expenses</h2><p>Up to 100 expenses in the selected period.</p><div class="table-wrap"><table><thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead><tbody id="expense-rows"></tbody></table></div></section>
+<div class="forms">
+<section><h2>Add manual sale</h2><form id="sale-form">
+<label>Customer (optional)<input name="customer" maxlength="200"></label>
+<label>Product / item<input name="product_name_snapshot" maxlength="200" required></label>
+<label>Sale price per item<input name="unit_price" inputmode="decimal" placeholder="0.00" required></label>
+<label>Cost per item (leave blank if unknown)<input name="unit_cost" inputmode="decimal" placeholder="Unknown"></label>
+<label>Quantity<input name="quantity" type="number" min="1" max="10000" value="1" required></label>
+<label>Currency<select name="currency"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>JPY</option><option>KWD</option></select></label>
+<label>Sale date<input name="sale_date" type="date" required></label>
+<label>Payment status<select name="payment_status"><option value="paid">Paid</option><option value="unpaid">Unpaid</option></select></label>
+<label>Payment method<input name="payment_method" placeholder="Cash, card, bank transfer…" maxlength="80" required></label>
+<label>Notes<textarea name="notes" maxlength="4000"></textarea></label>
+<button type="submit">Save sale</button><p class="form-message" role="status"></p>
+</form></section>
+<section><h2>Add expense</h2><form id="expense-form">
+<label>Category<input name="category" maxlength="100" placeholder="Supplies, processing fees…" required></label>
+<label>Description<input name="description" maxlength="500" required></label>
+<label>Vendor (optional)<input name="vendor" maxlength="200"></label>
+<label>Amount<input name="amount" inputmode="decimal" placeholder="0.00" required></label>
+<label>Currency<select name="currency"><option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>JPY</option><option>KWD</option></select></label>
+<label>Expense date<input name="expense_date" type="date" required></label>
+<label>Payment method<input name="payment_method" maxlength="80"></label>
+<label>Notes<textarea name="notes" maxlength="4000"></textarea></label>
+<button type="submit">Save expense</button><p class="form-message" role="status"></p>
+</form></section>
+</div>
+</main></body></html>

@@ -1,24 +1,17 @@
 {
-  "functions": {
-    "api/create-checkout-session": {
-      "memory": 1024,
-      "maxDuration": 60
-    },
-    "api/webhook": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
   "buildCommand": "npm run build",
-  "outputDirectory": ".",
-  "env": {
-    "production": {
-      "STRIPE_SECRET_KEY": "@stripe-secret-key",
-      "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
-    },
-    "preview": {
-      "STRIPE_SECRET_KEY": "@stripe-secret-key",
-      "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret"
-    }
-  }
+  "outputDirectory": "dist",
+  "functions": {
+    "api/finance.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60},
+    "api/finance-page.js": {"includeFiles": "admin/finance/index.html", "maxDuration": 60},
+    "api/webhook.js": {"maxDuration": 60},
+    "api/create-checkout-session.js": {"maxDuration": 60}
+  },
+  "rewrites": [
+    {"source": "/admin/finance", "destination": "/api/finance-page"},
+    {"source": "/admin/finance/", "destination": "/api/finance-page"},
+    {"source": "/admin/finance/index.html", "destination": "/api/finance-page"},
+    {"source": "/api/auth/:action", "destination": "/api/finance?finance_route=/api/auth/:action"},
+    {"source": "/api/admin/finance/:resource", "destination": "/api/finance?finance_route=/api/admin/finance/:resource"}
+  ]
 }
